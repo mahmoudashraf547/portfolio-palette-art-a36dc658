@@ -50,7 +50,14 @@ function PortfolioApp() {
         <Hero onEnter={() => setActive("tab2")} />
       )}
 
-      <main ref={sectionRef} className="max-w-7xl mx-auto px-4 pt-8 pb-24">
+      <main
+        ref={sectionRef}
+        className={
+          active === "home"
+            ? "max-w-7xl mx-auto px-4 pt-8 pb-24"
+            : "max-w-7xl mx-auto px-4 pt-32 md:pt-36 pb-24"
+        }
+      >
         {active === "home" && <HomeTab />}
         {active === "tab2" && <Tab2 />}
         {active === "tab3" && <Tab3 />}
