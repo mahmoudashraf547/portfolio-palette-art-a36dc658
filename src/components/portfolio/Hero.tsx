@@ -117,13 +117,20 @@ export function Hero({ onEnter }: { onEnter: () => void }) {
             multiline
             className="mt-4 text-base md:text-lg text-foreground/70 max-w-2xl mx-auto lg:mx-0 block"
           />
-          <div className="mt-8 flex justify-center lg:justify-start">
+          <div className="mt-8 flex flex-col items-center lg:items-start gap-3">
+            {editable && (
+              <div className="text-xs text-muted-foreground">
+                نص الزر (يمكن تعديله):
+                <EditableText tkey="hero.cta" as="span" className="mr-2 font-semibold text-violet" />
+              </div>
+            )}
             <Button
               size="lg"
               onClick={onEnter}
               className="gradient-bg text-white rounded-full px-8 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition"
             >
-              <EditableText tkey="hero.cta" as="span" /> <ArrowRight className="h-4 w-4 mr-2 rtl:rotate-180" />
+              <span>{state.texts["hero.cta"]?.text || "ادخل إلى الملف"}</span>
+              <ArrowRight className="h-4 w-4 mr-2 rtl:rotate-180" />
             </Button>
           </div>
         </div>
