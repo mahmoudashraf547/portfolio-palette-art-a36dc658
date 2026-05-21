@@ -167,7 +167,7 @@ const DEFAULT: PortfolioState = {
 };
 
 /* ----------------------------- Persistence ----------------------------- */
-const STORAGE_KEY = "portfolio-state-v1";
+const STORAGE_KEY = "portfolio-state-v2-ar";
 
 function loadState(): PortfolioState {
   if (typeof window === "undefined") return DEFAULT;
