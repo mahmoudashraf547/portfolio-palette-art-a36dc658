@@ -26,8 +26,8 @@ export function AdminBar() {
       <>
         <button
           onClick={() => setLoginOpen(true)}
-          className="fixed bottom-5 right-5 z-50 h-12 w-12 rounded-full glass-strong text-violet shadow-lg hover:scale-110 transition flex items-center justify-center"
-          aria-label="Admin login"
+          className="fixed bottom-5 left-5 z-50 h-12 w-12 rounded-full glass-strong text-violet shadow-lg hover:scale-110 transition flex items-center justify-center"
+          aria-label="تسجيل الدخول"
         >
           <Lock className="h-5 w-5" />
         </button>
