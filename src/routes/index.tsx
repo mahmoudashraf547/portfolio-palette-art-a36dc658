@@ -21,13 +21,13 @@ export const Route = createFileRoute("/")({
 });
 
 const TABS: NavTab[] = [
-  { id: "home", label: "Home" },
-  { id: "tab2", label: "Academic Competency" },
-  { id: "tab3", label: "Diversity" },
-  { id: "tab4", label: "Professional Values" },
-  { id: "tab5", label: "Research & Learning" },
-  { id: "tab6", label: "Technology" },
-  { id: "contact", label: "Contact" },
+  { id: "home", label: "الرئيسية" },
+  { id: "tab2", label: "الكفاية الأكاديمية" },
+  { id: "tab3", label: "التنوّع" },
+  { id: "tab4", label: "القيم المهنية" },
+  { id: "tab5", label: "البحث والتعلّم" },
+  { id: "tab6", label: "التكنولوجيا" },
+  { id: "contact", label: "تواصل" },
 ];
 
 function PortfolioApp() {
