@@ -34,8 +34,8 @@
   --color-violet: var(--violet);
   --color-skyblue: var(--skyblue);
   --color-deepblue: var(--deepblue);
-  --font-display: "Cairo", "Tajawal", system-ui, sans-serif;
-  --font-body: "Tajawal", "Cairo", system-ui, sans-serif;
+  --font-display: "Cairo", "Changa", "IBM Plex Sans Arabic", "Tajawal", system-ui, sans-serif;
+  --font-body: "Tajawal", "IBM Plex Sans Arabic", "Cairo", system-ui, sans-serif;
 }
 
 :root {
