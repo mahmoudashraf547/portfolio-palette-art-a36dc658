@@ -96,7 +96,7 @@ function SectionBlock({
           {editable ? (
             <textarea
               value={section.description || ""}
-              placeholder="Optional description"
+              placeholder="وصف اختياري"
               onChange={(e) => updateSection(area, section.id, { description: e.target.value })}
               className="mt-2 w-full text-sm bg-transparent border-b border-dashed border-violet/20 focus:outline-none focus:border-violet/60 resize-none"
               rows={2}
