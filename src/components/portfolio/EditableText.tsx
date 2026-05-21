@@ -19,7 +19,7 @@ import {
 
 interface Props {
   tkey: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: keyof React.JSX.IntrinsicElements;
   className?: string;
   placeholder?: string;
   multiline?: boolean;

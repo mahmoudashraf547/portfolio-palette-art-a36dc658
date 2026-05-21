@@ -9,8 +9,8 @@ let workerReady = false;
 async function ensurePdfWorker() {
   if (workerReady || typeof window === "undefined") return;
   const { pdfjs } = await import("react-pdf");
-  // @ts-expect-error vite worker import
-  const workerSrc = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
+  const workerSrc = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url" as string))
+    .default as string;
   pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
   workerReady = true;
 }
@@ -164,7 +164,7 @@ export function DocxPreviewModal({
       try {
         const res = await fetch(file.dataUrl);
         const buf = await res.arrayBuffer();
-        const mammoth = await import("mammoth/mammoth.browser");
+        const mammoth = await import(/* @vite-ignore */ "mammoth/mammoth.browser" as string);
         const { value } = await (mammoth as any).convertToHtml({ arrayBuffer: buf });
         setHtml(value);
       } catch (e: any) {
