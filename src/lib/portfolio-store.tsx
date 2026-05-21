@@ -47,10 +47,18 @@ export interface TextValue {
 
 export type Texts = Record<string, TextValue>;
 
+export interface TabConfig {
+  id: string; // stable id; built-in ids: home, tab2..tab6, contact
+  label: string;
+  type: "home" | "tab2" | "tab3" | "tab4" | "tab5" | "tab6" | "contact" | "custom";
+  hidden?: boolean;
+}
+
 export interface PortfolioState {
   texts: Texts;
   files: Record<string, StoredFile>; // for hero logo, etc.
   sections: Record<string, Section[]>; // key = tab/area id
+  tabs: TabConfig[];
 }
 
 /* ----------------------------- Defaults ----------------------------- */
@@ -175,10 +183,19 @@ const DEFAULT: PortfolioState = {
       { id: "ws", title: "أوراق العمل", cards: [] },
     ],
   },
+  tabs: [
+    { id: "home", label: "الرئيسية", type: "home" },
+    { id: "tab2", label: "الكفاية الأكاديمية", type: "tab2" },
+    { id: "tab3", label: "التنوّع", type: "tab3" },
+    { id: "tab4", label: "القيم المهنية", type: "tab4" },
+    { id: "tab5", label: "البحث والتعلّم", type: "tab5" },
+    { id: "tab6", label: "التكنولوجيا", type: "tab6" },
+    { id: "contact", label: "تواصل", type: "contact" },
+  ],
 };
 
 /* ----------------------------- Persistence ----------------------------- */
-const STORAGE_KEY = "portfolio-state-v2-ar";
+const STORAGE_KEY = "portfolio-state-v3-ar";
 
 function loadState(): PortfolioState {
   if (typeof window === "undefined") return DEFAULT;
@@ -190,6 +207,7 @@ function loadState(): PortfolioState {
       texts: { ...DEFAULT.texts, ...(parsed.texts || {}) },
       files: { ...DEFAULT.files, ...(parsed.files || {}) },
       sections: { ...DEFAULT.sections, ...(parsed.sections || {}) },
+      tabs: Array.isArray(parsed.tabs) && parsed.tabs.length ? parsed.tabs : DEFAULT.tabs,
     };
   } catch {
     return DEFAULT;
@@ -214,6 +232,12 @@ interface PortfolioContextValue {
   setCardFile: (area: string, sectionId: string, cardId: string, file: StoredFile | null) => void;
   reorderCards: (area: string, sectionId: string, fromId: string, toId: string) => void;
   reorderSections: (area: string, fromId: string, toId: string) => void;
+  // Tabs
+  addTab: (label?: string) => string;
+  renameTab: (id: string, label: string) => void;
+  removeTab: (id: string) => void;
+  moveTab: (id: string, dir: -1 | 1) => void;
+  toggleTabHidden: (id: string) => void;
   resetAll: () => void;
 }
 
@@ -352,6 +376,35 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
             next.splice(to, 0, moved);
             return next;
           }),
+        addTab: (label) => {
+          const id = "custom-" + crypto.randomUUID().slice(0, 8);
+          setState((s) => ({
+            ...s,
+            tabs: [...s.tabs, { id, label: label || "تبويب جديد", type: "custom" }],
+          }));
+          return id;
+        },
+        renameTab: (id, label) =>
+          setState((s) => ({
+            ...s,
+            tabs: s.tabs.map((t) => (t.id === id ? { ...t, label } : t)),
+          })),
+        removeTab: (id) =>
+          setState((s) => ({ ...s, tabs: s.tabs.filter((t) => t.id !== id) })),
+        moveTab: (id, dir) =>
+          setState((s) => {
+            const i = s.tabs.findIndex((t) => t.id === id);
+            const j = i + dir;
+            if (i < 0 || j < 0 || j >= s.tabs.length) return s;
+            const next = [...s.tabs];
+            [next[i], next[j]] = [next[j], next[i]];
+            return { ...s, tabs: next };
+          }),
+        toggleTabHidden: (id) =>
+          setState((s) => ({
+            ...s,
+            tabs: s.tabs.map((t) => (t.id === id ? { ...t, hidden: !t.hidden } : t)),
+          })),
         resetAll: () => setState(DEFAULT),
       }}
     >
