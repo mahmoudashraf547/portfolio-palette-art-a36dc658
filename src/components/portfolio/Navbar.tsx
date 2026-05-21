@@ -44,9 +44,9 @@ export function Navbar({
             onClick={() => onChange(tabs[0].id)}
             className="font-bold gradient-text text-sm md:text-base px-2 whitespace-nowrap"
           >
-            Practicum Portfolio
+            ملف الإنجاز
           </button>
-          <div className="hidden lg:flex items-center gap-1 ml-auto">
+          <div className="hidden lg:flex items-center gap-1 mr-auto">
             {tabs.map((t) => (
               <button
                 key={t.id}
@@ -67,8 +67,8 @@ export function Navbar({
           </div>
           <button
             onClick={() => setOpen(!open)}
-            className="lg:hidden ml-auto h-9 w-9 grid place-items-center rounded-full hover:bg-white/60"
-            aria-label="Menu"
+            className="lg:hidden mr-auto h-9 w-9 grid place-items-center rounded-full hover:bg-white/60"
+            aria-label="القائمة"
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
