@@ -1,22 +1,17 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { StoredFile } from "@/lib/portfolio-store";
 import { Button } from "@/components/ui/button";
 import { Download, FileText, FileType, Loader2, X } from "lucide-react";
-
-/* PDF.js worker setup (client-only) */
-let workerReady = false;
-async function ensurePdfWorker() {
-  if (workerReady || typeof window === "undefined") return;
-  const { pdfjs } = await import("react-pdf");
-  const workerSrc = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url" as string))
-    .default as string;
-  pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
-  workerReady = true;
-}
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  generatePdfThumbnail,
+  getCachedThumb,
+  getPdfjs,
+} from "@/lib/pdf-utils";
 
 const PdfDoc = lazy(async () => {
-  await ensurePdfWorker();
+  await getPdfjs(); // ensures worker is registered before react-pdf uses it
   const m = await import("react-pdf");
   return { default: m.Document };
 });
@@ -25,57 +20,52 @@ const PdfPage = lazy(async () => {
   return { default: m.Page };
 });
 
-/* ---------------- PDF Thumbnail (cached as image) ---------------- */
-const thumbCache = new Map<string, { dataUrl: string; pages: number }>();
-
+/* ---------------- PDF Thumbnail ---------------- */
 export function PdfThumbnail({ file, onClick }: { file: StoredFile; onClick?: () => void }) {
-  const cached = thumbCache.get(file.id);
-  const [pages, setPages] = useState<number | null>(cached?.pages ?? null);
+  const cached = getCachedThumb(file);
   const [thumb, setThumb] = useState<string | null>(cached?.dataUrl ?? null);
+  const [pages, setPages] = useState<number | null>(cached?.pages ?? null);
+  const [error, setError] = useState(false);
 
-  const handleRendered = (pageRef: any) => {
+  useEffect(() => {
     if (thumb) return;
-    try {
-      const canvas: HTMLCanvasElement | null =
-        pageRef?.canvas ||
-        (document.querySelector(`[data-pdf-thumb="${file.id}"] canvas`) as HTMLCanvasElement | null);
-      if (canvas) {
-        const url = canvas.toDataURL("image/jpeg", 0.8);
-        thumbCache.set(file.id, { dataUrl: url, pages: pages ?? 1 });
-        setThumb(url);
-      }
-    } catch {}
-  };
+    let cancelled = false;
+    generatePdfThumbnail(file)
+      .then((res) => {
+        if (cancelled) return;
+        setThumb(res.dataUrl);
+        setPages(res.pages);
+      })
+      .catch(() => !cancelled && setError(true));
+    return () => {
+      cancelled = true;
+    };
+  }, [file.id, file.dataUrl, thumb]);
 
   return (
     <button
       type="button"
       onClick={onClick}
-      data-pdf-thumb={file.id}
       className="group relative w-full overflow-hidden rounded-xl border bg-white/70 hover:shadow-xl transition shadow-md"
     >
       <div className="aspect-[3/4] w-full bg-gradient-to-br from-lavender/40 to-skyblue/40 flex items-center justify-center overflow-hidden relative">
         {thumb ? (
-          <img src={thumb} alt={file.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" loading="lazy" />
+          <img
+            src={thumb}
+            alt={file.name}
+            loading="lazy"
+            className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+          />
+        ) : error ? (
+          <FileText className="h-12 w-12 text-violet/70" />
         ) : (
-          <Suspense fallback={<Loader2 className="h-6 w-6 animate-spin text-violet" />}>
-            <PdfDoc
-              file={file.dataUrl}
-              loading={<Loader2 className="h-6 w-6 animate-spin text-violet" />}
-              onLoadSuccess={(d: any) => setPages(d.numPages)}
-              error={<FileText className="h-10 w-10 text-violet" />}
-            >
-              <PdfPage
-                pageNumber={1}
-                width={240}
-                renderTextLayer={false}
-                renderAnnotationLayer={false}
-                onRenderSuccess={handleRendered}
-              />
-            </PdfDoc>
-          </Suspense>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <Skeleton className="absolute inset-0 rounded-none bg-white/40" />
+            <Loader2 className="h-6 w-6 animate-spin text-violet relative" />
+            <span className="text-[10px] text-violet/70 relative">جاري التحضير…</span>
+          </div>
         )}
-        <span className="absolute top-2 left-2 text-[10px] font-bold tracking-wider bg-red-500 text-white px-2 py-0.5 rounded shadow">
+        <span className="absolute top-2 left-2 text-[10px] font-bold tracking-wider bg-red-500 text-white px-2 py-0.5 rounded shadow z-10">
           PDF
         </span>
       </div>
@@ -86,6 +76,50 @@ export function PdfThumbnail({ file, onClick }: { file: StoredFile; onClick?: ()
         </div>
       </div>
     </button>
+  );
+}
+
+/* ---------------- Lazy-rendered single page ---------------- */
+function LazyPdfPage({ pageNumber, width }: { pageNumber: number; width: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(pageNumber <= 2); // eager-render first 2
+
+  useEffect(() => {
+    if (visible || !ref.current) return;
+    const el = ref.current;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisible(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "600px 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [visible]);
+
+  // Maintain space so virtual scroll works
+  const placeholderHeight = Math.round(width * 1.41); // A4 ratio approx
+  return (
+    <div ref={ref} className="shadow-lg rounded overflow-hidden bg-white" style={{ minHeight: visible ? undefined : placeholderHeight, width }}>
+      {visible ? (
+        <PdfPage
+          pageNumber={pageNumber}
+          width={width}
+          renderTextLayer={false}
+          renderAnnotationLayer={false}
+          loading={
+            <div style={{ height: placeholderHeight }} className="flex items-center justify-center">
+              <Loader2 className="h-5 w-5 animate-spin text-violet" />
+            </div>
+          }
+        />
+      ) : (
+        <Skeleton className="w-full h-full" style={{ height: placeholderHeight }} />
+      )}
+    </div>
   );
 }
 
@@ -110,29 +144,26 @@ export function PdfPreviewModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent
-        className="max-w-5xl w-[95vw] h-[92vh] p-0 overflow-hidden glass-strong"
-       
-      >
-        <DialogTitle className="sr-only">{file?.name || "PDF preview"}</DialogTitle>
+      <DialogContent className="max-w-5xl w-[95vw] h-[92vh] p-0 overflow-hidden glass-strong">
+        <DialogTitle className="sr-only">{file?.name || "معاينة PDF"}</DialogTitle>
         <div className="flex items-center justify-between px-4 py-3 border-b bg-white/60">
           <div className="flex items-center gap-2 min-w-0">
             <FileText className="h-4 w-4 text-violet shrink-0" />
             <span className="text-sm font-medium truncate">{file?.name}</span>
             {numPages > 0 && (
-              <span className="text-xs text-muted-foreground">· {numPages} pages</span>
+              <span className="text-xs text-muted-foreground">· {numPages} صفحة</span>
             )}
           </div>
           <div className="flex items-center gap-2">
             {file && (
               <a href={file.dataUrl} download={file.name}>
                 <Button size="sm" variant="outline">
-                  <Download className="h-3 w-3 mr-1" /> Download
+                  <Download className="h-3 w-3 ml-1" /> تحميل
                 </Button>
               </a>
             )}
             <Button size="sm" variant="ghost" onClick={onClose}>
-              <X className="h-4 w-4" /> Close
+              <X className="h-4 w-4" /> إغلاق
             </Button>
           </div>
         </div>
@@ -140,8 +171,10 @@ export function PdfPreviewModal({
           {file && (
             <Suspense
               fallback={
-                <div className="flex items-center gap-2 text-violet">
-                  <Loader2 className="h-5 w-5 animate-spin" /> Loading PDF…
+                <div className="flex flex-col items-center gap-3 text-violet pt-8">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                  <span className="text-sm">جاري تحميل المستند…</span>
+                  <Skeleton className="w-[80%] max-w-[600px] h-[800px]" />
                 </div>
               }
             >
@@ -149,21 +182,16 @@ export function PdfPreviewModal({
                 file={file.dataUrl}
                 onLoadSuccess={(d: any) => setNumPages(d.numPages)}
                 loading={
-                  <div className="flex items-center gap-2 text-violet">
-                    <Loader2 className="h-5 w-5 animate-spin" /> Loading PDF…
+                  <div className="flex flex-col items-center gap-3 text-violet pt-8">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                    <span className="text-sm">جاري تحميل المستند…</span>
+                    <Skeleton className="w-[80%] max-w-[600px] h-[800px]" />
                   </div>
                 }
-                error={<div className="text-destructive">Failed to load PDF.</div>}
+                error={<div className="text-destructive">تعذّر تحميل المستند.</div>}
               >
                 {Array.from({ length: numPages }, (_, i) => (
-                  <div key={i} className="shadow-lg rounded overflow-hidden bg-white">
-                    <PdfPage
-                      pageNumber={i + 1}
-                      width={width}
-                      renderTextLayer={false}
-                      renderAnnotationLayer={false}
-                    />
-                  </div>
+                  <LazyPdfPage key={i} pageNumber={i + 1} width={width} />
                 ))}
               </PdfDoc>
             </Suspense>
@@ -201,7 +229,7 @@ export function DocxPreviewModal({
         const { value } = await (mammoth as any).convertToHtml({ arrayBuffer: buf });
         setHtml(value);
       } catch (e: any) {
-        setErr(e?.message || "Failed to preview DOCX");
+        setErr(e?.message || "تعذّر معاينة الملف");
       } finally {
         setLoading(false);
       }
@@ -210,11 +238,8 @@ export function DocxPreviewModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent
-        className="max-w-4xl w-[95vw] h-[92vh] p-0 overflow-hidden glass-strong"
-       
-      >
-        <DialogTitle className="sr-only">{file?.name || "Document preview"}</DialogTitle>
+      <DialogContent className="max-w-4xl w-[95vw] h-[92vh] p-0 overflow-hidden glass-strong">
+        <DialogTitle className="sr-only">{file?.name || "معاينة المستند"}</DialogTitle>
         <div className="flex items-center justify-between px-4 py-3 border-b bg-white/60">
           <div className="flex items-center gap-2 min-w-0">
             <FileType className="h-4 w-4 text-violet shrink-0" />
@@ -224,19 +249,19 @@ export function DocxPreviewModal({
             {file && (
               <a href={file.dataUrl} download={file.name}>
                 <Button size="sm" variant="outline">
-                  <Download className="h-3 w-3 mr-1" /> Download
+                  <Download className="h-3 w-3 ml-1" /> تحميل
                 </Button>
               </a>
             )}
             <Button size="sm" variant="ghost" onClick={onClose}>
-              <X className="h-4 w-4" /> Close
+              <X className="h-4 w-4" /> إغلاق
             </Button>
           </div>
         </div>
         <div className="overflow-auto h-[calc(92vh-56px)] bg-white p-8">
           {loading && (
             <div className="flex items-center gap-2 text-violet">
-              <Loader2 className="h-5 w-5 animate-spin" /> Converting document…
+              <Loader2 className="h-5 w-5 animate-spin" /> جاري تحويل المستند…
             </div>
           )}
           {err && <div className="text-destructive">{err}</div>}
@@ -265,7 +290,7 @@ export function VideoPreviewModal({
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-4xl w-[95vw] p-0 overflow-hidden glass-strong">
-        <DialogTitle className="sr-only">{file?.name || "Video"}</DialogTitle>
+        <DialogTitle className="sr-only">{file?.name || "فيديو"}</DialogTitle>
         <div className="flex items-center justify-between px-4 py-3 border-b bg-white/60">
           <span className="text-sm font-medium truncate">{file?.name}</span>
           <Button size="sm" variant="ghost" onClick={onClose}>
@@ -293,9 +318,9 @@ export function FilePreviewRenderer({
     return (
       <button onClick={onClick} className="group block w-full overflow-hidden rounded-xl border shadow-md hover:shadow-xl transition">
         <img src={file.dataUrl} alt={file.name} className="aspect-[3/4] w-full object-cover" />
-        <div className="px-3 py-2 text-left bg-white/70">
+        <div className="px-3 py-2 text-right bg-white/70">
           <div className="text-xs font-medium truncate">{file.name}</div>
-          <div className="text-[10px] text-muted-foreground">Image</div>
+          <div className="text-[10px] text-muted-foreground">صورة</div>
         </div>
       </button>
     );
@@ -303,20 +328,19 @@ export function FilePreviewRenderer({
     return (
       <button onClick={onClick} className="group relative block w-full overflow-hidden rounded-xl border shadow-md hover:shadow-xl transition">
         <video src={file.dataUrl} className="aspect-[3/4] w-full object-cover bg-black" />
-        <div className="px-3 py-2 text-left bg-white/70">
+        <div className="px-3 py-2 text-right bg-white/70">
           <div className="text-xs font-medium truncate">{file.name}</div>
-          <div className="text-[10px] text-muted-foreground">Video</div>
+          <div className="text-[10px] text-muted-foreground">فيديو</div>
         </div>
       </button>
     );
-  // docx, pptx, other
   return (
     <button onClick={onClick} className="group block w-full overflow-hidden rounded-xl border shadow-md hover:shadow-xl transition bg-white/70">
       <div className="aspect-[3/4] w-full bg-gradient-to-br from-lavender/40 to-skyblue/40 flex flex-col items-center justify-center gap-2">
         <FileType className="h-12 w-12 text-violet" />
         <span className="text-xs font-medium px-3 text-center break-all">{file.name}</span>
       </div>
-      <div className="px-3 py-2 text-left">
+      <div className="px-3 py-2 text-right">
         <div className="text-xs font-medium truncate">{file.name}</div>
         <div className="text-[10px] text-muted-foreground uppercase">{file.kind}</div>
       </div>
@@ -353,21 +377,20 @@ export function FilePreviewDialog({
         </DialogContent>
       </Dialog>
     );
-  // other: offer download
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-md glass-strong">
         <DialogTitle>{file.name}</DialogTitle>
         <p className="text-sm text-muted-foreground">
-          Preview is not available for this file type. You can download it instead.
+          لا تتوفّر معاينة لهذا النوع من الملفات. يمكنك تحميله بدلاً من ذلك.
         </p>
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>
-            Close
+            إغلاق
           </Button>
           <a href={file.dataUrl} download={file.name}>
             <Button>
-              <Download className="h-4 w-4 mr-1" /> Download
+              <Download className="h-4 w-4 ml-1" /> تحميل
             </Button>
           </a>
         </div>
