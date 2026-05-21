@@ -83,7 +83,7 @@ export function Navbar({
                   setOpen(false);
                 }}
                 className={cn(
-                  "block w-full text-left px-3 py-2 rounded-xl text-sm",
+                  "block w-full text-right px-3 py-2 rounded-xl text-sm",
                   active === t.id ? "gradient-bg text-white" : "hover:bg-white/60"
                 )}
               >
