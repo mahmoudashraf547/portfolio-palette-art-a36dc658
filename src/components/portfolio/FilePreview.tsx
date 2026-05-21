@@ -79,7 +79,7 @@ export function PdfPreviewModal({
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent
         className="max-w-5xl w-[95vw] h-[92vh] p-0 overflow-hidden glass-strong"
-        showCloseButton={false}
+       
       >
         <DialogTitle className="sr-only">{file?.name || "PDF preview"}</DialogTitle>
         <div className="flex items-center justify-between px-4 py-3 border-b bg-white/60">
@@ -179,7 +179,7 @@ export function DocxPreviewModal({
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent
         className="max-w-4xl w-[95vw] h-[92vh] p-0 overflow-hidden glass-strong"
-        showCloseButton={false}
+       
       >
         <DialogTitle className="sr-only">{file?.name || "Document preview"}</DialogTitle>
         <div className="flex items-center justify-between px-4 py-3 border-b bg-white/60">
@@ -231,7 +231,7 @@ export function VideoPreviewModal({
 }) {
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-4xl w-[95vw] p-0 overflow-hidden glass-strong" showCloseButton={false}>
+      <DialogContent className="max-w-4xl w-[95vw] p-0 overflow-hidden glass-strong">
         <DialogTitle className="sr-only">{file?.name || "Video"}</DialogTitle>
         <div className="flex items-center justify-between px-4 py-3 border-b bg-white/60">
           <span className="text-sm font-medium truncate">{file?.name}</span>
@@ -308,7 +308,7 @@ export function FilePreviewDialog({
   if (file.kind === "image")
     return (
       <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-        <DialogContent className="max-w-5xl p-0 glass-strong overflow-hidden" showCloseButton={false}>
+        <DialogContent className="max-w-5xl p-0 glass-strong overflow-hidden">
           <DialogTitle className="sr-only">{file.name}</DialogTitle>
           <div className="flex items-center justify-between px-4 py-3 border-b bg-white/60">
             <span className="text-sm font-medium truncate">{file.name}</span>
@@ -323,7 +323,7 @@ export function FilePreviewDialog({
   // other: offer download
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-md glass-strong" showCloseButton={false}>
+      <DialogContent className="max-w-md glass-strong">
         <DialogTitle>{file.name}</DialogTitle>
         <p className="text-sm text-muted-foreground">
           Preview is not available for this file type. You can download it instead.
