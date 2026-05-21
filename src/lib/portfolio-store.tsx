@@ -329,6 +329,29 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
                 : s
             )
           ),
+        reorderCards: (area, sectionId, fromId, toId) =>
+          updateArea(area, (list) =>
+            list.map((s) => {
+              if (s.id !== sectionId) return s;
+              const from = s.cards.findIndex((c) => c.id === fromId);
+              const to = s.cards.findIndex((c) => c.id === toId);
+              if (from < 0 || to < 0 || from === to) return s;
+              const next = [...s.cards];
+              const [moved] = next.splice(from, 1);
+              next.splice(to, 0, moved);
+              return { ...s, cards: next };
+            })
+          ),
+        reorderSections: (area, fromId, toId) =>
+          updateArea(area, (list) => {
+            const from = list.findIndex((x) => x.id === fromId);
+            const to = list.findIndex((x) => x.id === toId);
+            if (from < 0 || to < 0 || from === to) return list;
+            const next = [...list];
+            const [moved] = next.splice(from, 1);
+            next.splice(to, 0, moved);
+            return next;
+          }),
         resetAll: () => setState(DEFAULT),
       }}
     >
