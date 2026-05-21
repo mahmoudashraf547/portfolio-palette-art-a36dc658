@@ -14,7 +14,7 @@ interface Props {
   compact?: boolean;
 }
 
-export function FileUploader({ value, onChange, label = "Upload file", accept, compact }: Props) {
+export function FileUploader({ value, onChange, label = "رفع ملف", accept, compact }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag] = useState(false);
   const [err, setErr] = useState<string | null>(null);
