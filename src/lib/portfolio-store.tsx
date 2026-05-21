@@ -11,11 +11,15 @@ export interface StoredFile {
   size: number;
 }
 
+export type CardKind = "file" | "text" | "button" | "divider";
+
 export interface CardItem {
   id: string;
+  kind?: CardKind; // default "file"
   title: string;
   description: string;
   file?: StoredFile;
+  link?: string;
 }
 
 export interface Section {
@@ -32,6 +36,13 @@ export interface TextValue {
   fontWeight?: string;
   color?: string;
   align?: "left" | "center" | "right";
+  lineHeight?: string;
+  letterSpacing?: string;
+  opacity?: number;
+  italic?: boolean;
+  underline?: boolean;
+  gradientFrom?: string;
+  gradientTo?: string;
 }
 
 export type Texts = Record<string, TextValue>;
@@ -201,6 +212,8 @@ interface PortfolioContextValue {
   updateCard: (area: string, sectionId: string, cardId: string, patch: Partial<CardItem>) => void;
   removeCard: (area: string, sectionId: string, cardId: string) => void;
   setCardFile: (area: string, sectionId: string, cardId: string, file: StoredFile | null) => void;
+  reorderCards: (area: string, sectionId: string, fromId: string, toId: string) => void;
+  reorderSections: (area: string, fromId: string, toId: string) => void;
   resetAll: () => void;
 }
 
