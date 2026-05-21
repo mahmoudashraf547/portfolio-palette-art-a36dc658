@@ -61,7 +61,7 @@ function PortfolioApp() {
       </main>
 
       <footer className="py-10 text-center text-xs text-muted-foreground border-t border-white/40 backdrop-blur">
-        <p>© {new Date().getFullYear()} Rayyan Al-Nabhani — Teaching Practicum Portfolio</p>
+        <p>© {new Date().getFullYear()} ريّان النبهاني — ملف التدريب الميداني</p>
       </footer>
 
       <AdminBar />
