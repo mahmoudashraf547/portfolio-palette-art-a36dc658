@@ -121,7 +121,7 @@ function SectionBlock({
               variant="ghost"
               className="text-destructive"
               onClick={() => {
-                if (confirm("Delete this section?")) removeSection(area, section.id);
+                if (confirm("حذف هذا القسم؟")) removeSection(area, section.id);
               }}
             >
               <Trash2 className="h-4 w-4" />
