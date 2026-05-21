@@ -28,10 +28,9 @@ interface Props {
 const FONTS = [
   "Cairo, sans-serif",
   "Tajawal, sans-serif",
-  "Inter, sans-serif",
+  "'IBM Plex Sans Arabic', sans-serif",
+  "Changa, sans-serif",
   "Georgia, serif",
-  "'Playfair Display', serif",
-  "'Courier New', monospace",
 ];
 
 export function EditableText({
