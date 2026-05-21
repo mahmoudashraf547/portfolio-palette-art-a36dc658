@@ -280,7 +280,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
                       ...s.cards,
                       {
                         id: crypto.randomUUID(),
-                        title: card?.title ?? "New item",
+                        title: card?.title ?? "عنصر جديد",
                         description: card?.description ?? "",
                         ...card,
                       },
