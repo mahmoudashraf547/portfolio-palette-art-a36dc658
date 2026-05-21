@@ -47,10 +47,18 @@ export interface TextValue {
 
 export type Texts = Record<string, TextValue>;
 
+export interface TabConfig {
+  id: string; // stable id; built-in ids: home, tab2..tab6, contact
+  label: string;
+  type: "home" | "tab2" | "tab3" | "tab4" | "tab5" | "tab6" | "contact" | "custom";
+  hidden?: boolean;
+}
+
 export interface PortfolioState {
   texts: Texts;
   files: Record<string, StoredFile>; // for hero logo, etc.
   sections: Record<string, Section[]>; // key = tab/area id
+  tabs: TabConfig[];
 }
 
 /* ----------------------------- Defaults ----------------------------- */
