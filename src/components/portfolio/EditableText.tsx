@@ -100,16 +100,16 @@ export function EditableText({
               <Type className="h-3 w-3" />
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-72 glass-strong">
+          <PopoverContent className="w-72 glass-strong" dir="rtl">
             <div className="space-y-3 text-sm">
               <div>
-                <label className="text-xs text-muted-foreground">Font family</label>
+                <label className="text-xs text-muted-foreground">نوع الخط</label>
                 <select
                   value={val.fontFamily || ""}
                   onChange={(e) => setText(tkey, { fontFamily: e.target.value || undefined })}
                   className="w-full mt-1 rounded border px-2 py-1 bg-white"
                 >
-                  <option value="">Default</option>
+                  <option value="">افتراضي</option>
                   {FONTS.map((f) => (
                     <option key={f} value={f}>
                       {f.split(",")[0]}
@@ -118,7 +118,7 @@ export function EditableText({
                 </select>
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-xs text-muted-foreground flex-1">Size</label>
+                <label className="text-xs text-muted-foreground flex-1">الحجم</label>
                 <input
                   type="text"
                   placeholder="1rem"
@@ -128,7 +128,7 @@ export function EditableText({
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-xs text-muted-foreground flex-1">Color</label>
+                <label className="text-xs text-muted-foreground flex-1">اللون</label>
                 <input
                   type="color"
                   value={val.color || "#2a2050"}
@@ -147,13 +147,13 @@ export function EditableText({
                 >
                   <Bold className="h-3 w-3" />
                 </Button>
-                <div className="ml-auto flex gap-1">
+                <div className="mr-auto flex gap-1">
                   <Button
                     size="sm"
-                    variant={val.align === "left" ? "default" : "outline"}
-                    onClick={() => setText(tkey, { align: "left" })}
+                    variant={val.align === "right" ? "default" : "outline"}
+                    onClick={() => setText(tkey, { align: "right" })}
                   >
-                    <AlignLeft className="h-3 w-3" />
+                    <AlignRight className="h-3 w-3" />
                   </Button>
                   <Button
                     size="sm"
@@ -164,10 +164,10 @@ export function EditableText({
                   </Button>
                   <Button
                     size="sm"
-                    variant={val.align === "right" ? "default" : "outline"}
-                    onClick={() => setText(tkey, { align: "right" })}
+                    variant={val.align === "left" ? "default" : "outline"}
+                    onClick={() => setText(tkey, { align: "left" })}
                   >
-                    <AlignRight className="h-3 w-3" />
+                    <AlignLeft className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
@@ -185,7 +185,7 @@ export function EditableText({
                   })
                 }
               >
-                Reset style
+                إعادة تعيين التنسيق
               </Button>
             </div>
           </PopoverContent>
