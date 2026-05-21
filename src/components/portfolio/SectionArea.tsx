@@ -39,12 +39,12 @@ export function SectionArea({ area, className }: Props) {
           onClick={() =>
             addSection(area, {
               id: crypto.randomUUID(),
-              title: "New Section",
+              title: "قسم جديد",
               cards: [],
             })
           }
         >
-          <Plus className="h-4 w-4 mr-1" /> Add section
+          <Plus className="h-4 w-4 ml-1" /> إضافة قسم
         </Button>
       )}
     </div>
