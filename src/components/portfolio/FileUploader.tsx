@@ -23,7 +23,7 @@ export function FileUploader({ value, onChange, label = "رفع ملف", accept,
     if (!files || !files[0]) return;
     const f = files[0];
     if (f.size > MAX_SIZE) {
-      setErr(`File too large (max ${MAX_SIZE / 1024 / 1024} MB for in-browser storage).`);
+      setErr(`الملف كبير جداً (الحد الأقصى ${MAX_SIZE / 1024 / 1024} ميجابايت).`);
       return;
     }
     setErr(null);
