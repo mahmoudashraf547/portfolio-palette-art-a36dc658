@@ -232,6 +232,12 @@ interface PortfolioContextValue {
   setCardFile: (area: string, sectionId: string, cardId: string, file: StoredFile | null) => void;
   reorderCards: (area: string, sectionId: string, fromId: string, toId: string) => void;
   reorderSections: (area: string, fromId: string, toId: string) => void;
+  // Tabs
+  addTab: (label?: string) => string;
+  renameTab: (id: string, label: string) => void;
+  removeTab: (id: string) => void;
+  moveTab: (id: string, dir: -1 | 1) => void;
+  toggleTabHidden: (id: string) => void;
   resetAll: () => void;
 }
 
