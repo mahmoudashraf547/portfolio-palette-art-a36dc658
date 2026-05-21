@@ -150,11 +150,11 @@ function SectionBlock({
             className="rounded-xl border-2 border-dashed border-violet/40 bg-white/40 hover:bg-white/70 min-h-[180px] flex flex-col items-center justify-center text-violet transition"
           >
             <Plus className="h-6 w-6" />
-            <span className="text-sm mt-1">Add item</span>
+            <span className="text-sm mt-1">إضافة عنصر</span>
           </button>
         )}
         {!editable && section.cards.length === 0 && (
-          <p className="col-span-full text-sm text-muted-foreground italic">No items yet.</p>
+          <p className="col-span-full text-sm text-muted-foreground italic">لا توجد عناصر بعد.</p>
         )}
       </div>
 
