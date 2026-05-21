@@ -376,6 +376,35 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
             next.splice(to, 0, moved);
             return next;
           }),
+        addTab: (label) => {
+          const id = "custom-" + crypto.randomUUID().slice(0, 8);
+          setState((s) => ({
+            ...s,
+            tabs: [...s.tabs, { id, label: label || "تبويب جديد", type: "custom" }],
+          }));
+          return id;
+        },
+        renameTab: (id, label) =>
+          setState((s) => ({
+            ...s,
+            tabs: s.tabs.map((t) => (t.id === id ? { ...t, label } : t)),
+          })),
+        removeTab: (id) =>
+          setState((s) => ({ ...s, tabs: s.tabs.filter((t) => t.id !== id) })),
+        moveTab: (id, dir) =>
+          setState((s) => {
+            const i = s.tabs.findIndex((t) => t.id === id);
+            const j = i + dir;
+            if (i < 0 || j < 0 || j >= s.tabs.length) return s;
+            const next = [...s.tabs];
+            [next[i], next[j]] = [next[j], next[i]];
+            return { ...s, tabs: next };
+          }),
+        toggleTabHidden: (id) =>
+          setState((s) => ({
+            ...s,
+            tabs: s.tabs.map((t) => (t.id === id ? { ...t, hidden: !t.hidden } : t)),
+          })),
         resetAll: () => setState(DEFAULT),
       }}
     >
