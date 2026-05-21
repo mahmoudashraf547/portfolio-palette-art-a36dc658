@@ -25,31 +25,64 @@ const PdfPage = lazy(async () => {
   return { default: m.Page };
 });
 
-/* ---------------- PDF Thumbnail ---------------- */
+/* ---------------- PDF Thumbnail (cached as image) ---------------- */
+const thumbCache = new Map<string, { dataUrl: string; pages: number }>();
+
 export function PdfThumbnail({ file, onClick }: { file: StoredFile; onClick?: () => void }) {
-  const [pages, setPages] = useState<number | null>(null);
+  const cached = thumbCache.get(file.id);
+  const [pages, setPages] = useState<number | null>(cached?.pages ?? null);
+  const [thumb, setThumb] = useState<string | null>(cached?.dataUrl ?? null);
+
+  const handleRendered = (pageRef: any) => {
+    if (thumb) return;
+    try {
+      const canvas: HTMLCanvasElement | null =
+        pageRef?.canvas ||
+        (document.querySelector(`[data-pdf-thumb="${file.id}"] canvas`) as HTMLCanvasElement | null);
+      if (canvas) {
+        const url = canvas.toDataURL("image/jpeg", 0.8);
+        thumbCache.set(file.id, { dataUrl: url, pages: pages ?? 1 });
+        setThumb(url);
+      }
+    } catch {}
+  };
+
   return (
     <button
       type="button"
       onClick={onClick}
+      data-pdf-thumb={file.id}
       className="group relative w-full overflow-hidden rounded-xl border bg-white/70 hover:shadow-xl transition shadow-md"
     >
-      <div className="aspect-[3/4] w-full bg-gradient-to-br from-lavender/40 to-skyblue/40 flex items-center justify-center overflow-hidden">
-        <Suspense fallback={<Loader2 className="h-6 w-6 animate-spin text-violet" />}>
-          <PdfDoc
-            file={file.dataUrl}
-            loading={<Loader2 className="h-6 w-6 animate-spin text-violet" />}
-            onLoadSuccess={(d: any) => setPages(d.numPages)}
-            error={<FileText className="h-10 w-10 text-violet" />}
-          >
-            <PdfPage pageNumber={1} width={240} renderTextLayer={false} renderAnnotationLayer={false} />
-          </PdfDoc>
-        </Suspense>
+      <div className="aspect-[3/4] w-full bg-gradient-to-br from-lavender/40 to-skyblue/40 flex items-center justify-center overflow-hidden relative">
+        {thumb ? (
+          <img src={thumb} alt={file.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" loading="lazy" />
+        ) : (
+          <Suspense fallback={<Loader2 className="h-6 w-6 animate-spin text-violet" />}>
+            <PdfDoc
+              file={file.dataUrl}
+              loading={<Loader2 className="h-6 w-6 animate-spin text-violet" />}
+              onLoadSuccess={(d: any) => setPages(d.numPages)}
+              error={<FileText className="h-10 w-10 text-violet" />}
+            >
+              <PdfPage
+                pageNumber={1}
+                width={240}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+                onRenderSuccess={handleRendered}
+              />
+            </PdfDoc>
+          </Suspense>
+        )}
+        <span className="absolute top-2 left-2 text-[10px] font-bold tracking-wider bg-red-500 text-white px-2 py-0.5 rounded shadow">
+          PDF
+        </span>
       </div>
-      <div className="px-3 py-2 text-left">
+      <div className="px-3 py-2 text-right">
         <div className="text-xs font-medium truncate">{file.name}</div>
-        <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-          <FileText className="h-3 w-3" /> PDF{pages ? ` · ${pages} pages` : ""}
+        <div className="text-[10px] text-muted-foreground flex items-center gap-1 justify-end">
+          <FileText className="h-3 w-3" /> PDF{pages ? ` · ${pages} صفحة` : ""}
         </div>
       </div>
     </button>
