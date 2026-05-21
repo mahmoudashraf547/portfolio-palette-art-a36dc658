@@ -259,7 +259,7 @@ function SectionBlock({
                     <span className="text-sm mt-1">إضافة عنصر</span>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" dir="rtl">
+                <DropdownMenuContent align="end" className="rtl-menu">
                   <DropdownMenuItem onClick={() => addBlock("file")}>
                     <Paperclip className="h-4 w-4 ml-2" /> ملف (PDF / صورة / فيديو / DOCX)
                   </DropdownMenuItem>
