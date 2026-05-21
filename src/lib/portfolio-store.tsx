@@ -195,7 +195,7 @@ const DEFAULT: PortfolioState = {
 };
 
 /* ----------------------------- Persistence ----------------------------- */
-const STORAGE_KEY = "portfolio-state-v2-ar";
+const STORAGE_KEY = "portfolio-state-v3-ar";
 
 function loadState(): PortfolioState {
   if (typeof window === "undefined") return DEFAULT;
@@ -207,6 +207,7 @@ function loadState(): PortfolioState {
       texts: { ...DEFAULT.texts, ...(parsed.texts || {}) },
       files: { ...DEFAULT.files, ...(parsed.files || {}) },
       sections: { ...DEFAULT.sections, ...(parsed.sections || {}) },
+      tabs: Array.isArray(parsed.tabs) && parsed.tabs.length ? parsed.tabs : DEFAULT.tabs,
     };
   } catch {
     return DEFAULT;
