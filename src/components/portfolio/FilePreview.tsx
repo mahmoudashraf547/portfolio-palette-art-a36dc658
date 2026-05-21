@@ -164,7 +164,7 @@ export function DocxPreviewModal({
       try {
         const res = await fetch(file.dataUrl);
         const buf = await res.arrayBuffer();
-        const mammoth = await import(/* @vite-ignore */ "mammoth/mammoth.browser" as string);
+        const mammoth: any = await import("mammoth");
         const { value } = await (mammoth as any).convertToHtml({ arrayBuffer: buf });
         setHtml(value);
       } catch (e: any) {
