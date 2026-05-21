@@ -47,50 +47,48 @@ const t = (text: string): TextValue => ({ text });
 
 const DEFAULT: PortfolioState = {
   texts: {
-    "site.title": t("Teaching Practicum Portfolio"),
-    "site.subtitle": t("For Student Teacher: Rayyan Al-Nabhani"),
-    "site.major": t("Major: Art Education"),
-    "hero.welcome": t("Welcome to my Portfolio"),
+    "site.title": t("ملف التدريب الميداني"),
+    "site.subtitle": t("للمعلم الطالب: ريّان النبهاني"),
+    "site.major": t("التخصص: التربية الفنية"),
+    "hero.welcome": t("مرحباً بكم في ملف إنجازي"),
     "hero.intro": t(
-      "An artistic journey through my teaching practicum — reflections, lesson plans, research, and creative projects that shaped my growth as an art educator."
+      "رحلة فنية عبر تدريبي الميداني — تأملات، خطط دروس، أبحاث، ومشاريع إبداعية شكّلت نموّي معلّمًا للتربية الفنية."
     ),
-    "hero.cta": t("Enter Portfolio"),
+    "hero.cta": t("ادخل إلى الملف"),
 
-    "home.intro.title": t("Introduction"),
+    "home.intro.title": t("مقدّمة"),
     "home.intro.body": t(
-      "I am a student teacher specializing in Art Education, passionate about nurturing creativity, visual literacy, and self-expression in young learners. This portfolio gathers evidence of my growth across the six axes of the teaching practicum."
+      "أنا معلّم طالب متخصّص في التربية الفنية، شغوف بتنمية الإبداع والثقافة البصرية والتعبير الذاتي لدى المتعلمين. يجمع هذا الملف شواهد نموّي عبر محاور التدريب الميداني الستة."
     ),
-    "home.philosophy.title": t("Teaching Philosophy"),
+    "home.philosophy.title": t("فلسفتي في التدريس"),
     "home.philosophy.body": t(
-      "I believe art education empowers students to think critically, communicate visually, and embrace their unique voice. My classroom is a safe studio where curiosity, experimentation, and reflection guide every lesson."
+      "أؤمن بأن التربية الفنية تمكّن الطلاب من التفكير الناقد والتواصل البصري واحتضان صوتهم الفريد. صفّي مرسمٌ آمن يقود فيه الفضول والتجريب والتأمّل كلّ درس."
     ),
-    "home.cv.title": t("CV / Resume"),
-    "home.cv.body": t("Upload your CV (PDF or DOCX) so visitors can preview it directly."),
-    "home.reflective.title": t("Reflective Papers"),
+    "home.cv.title": t("السيرة الذاتية"),
+    "home.cv.body": t("ارفع سيرتك الذاتية (PDF أو DOCX) ليتمكن الزوار من معاينتها مباشرة."),
+    "home.reflective.title": t("الأوراق التأمّلية"),
 
-    "tab2.title": t("Academic Competency & Specialized Expertise"),
-    "tab2.intro": t(
-      "Evidence of curriculum design, content knowledge, and reflective practice in art education."
-    ),
-    "tab2.other.title": t("Other Coursework"),
+    "tab2.title": t("الكفاية الأكاديمية والخبرة التخصصية"),
+    "tab2.intro": t("شواهد على تصميم المنهج، والمعرفة بالمحتوى، والممارسة التأمّلية في التربية الفنية."),
+    "tab2.other.title": t("مقرّرات أخرى"),
 
-    "tab3.title": t("Diversity in Teaching"),
-    "tab3.intro": t("Lesson plans, peer visits, and family engagement evidence."),
-    "tab3.g6.title": t("Grade 6 — Lesson Plans"),
-    "tab3.g7.title": t("Grade 7 — Lesson Plans"),
+    "tab3.title": t("التنوّع في التدريس"),
+    "tab3.intro": t("خطط الدروس، الزيارات التبادلية، وشواهد التواصل الأسري."),
+    "tab3.g6.title": t("الصف السادس — خطط الدروس"),
+    "tab3.g7.title": t("الصف السابع — خطط الدروس"),
 
-    "tab4.title": t("Professional Values & Attitudes"),
-    "tab4.intro": t("Professionalism, ethics, and personal philosophy in practice."),
+    "tab4.title": t("القيم والاتجاهات المهنية"),
+    "tab4.intro": t("المهنية والأخلاق والفلسفة الشخصية في الممارسة."),
 
-    "tab5.title": t("Research Culture & Lifelong Learning"),
-    "tab5.intro": t("Action research, workshops, and continuous professional development."),
-    "tab5.prev.title": t("Previous Projects"),
+    "tab5.title": t("ثقافة البحث والتعلّم المستمر"),
+    "tab5.intro": t("البحث الإجرائي وورش العمل والتطوير المهني المستمر."),
+    "tab5.prev.title": t("مشاريع سابقة"),
 
-    "tab6.title": t("Technological Skills"),
-    "tab6.intro": t("Integrating technology meaningfully into art education."),
+    "tab6.title": t("المهارات التقنية"),
+    "tab6.intro": t("توظيف التكنولوجيا بشكل هادف في التربية الفنية."),
 
-    "contact.title": t("Get in Touch"),
-    "contact.intro": t("Feel free to reach out for collaboration, feedback, or questions."),
+    "contact.title": t("تواصل معي"),
+    "contact.intro": t("لا تتردّد في التواصل للتعاون أو إبداء الملاحظات أو طرح الأسئلة."),
     "contact.email": t("rayyanalnabhani23@gmail.com"),
     "contact.phone": t("97550512"),
   },
@@ -99,77 +97,77 @@ const DEFAULT: PortfolioState = {
     "home.reflective": [
       {
         id: "rp1",
-        title: "Reflective Paper",
+        title: "ورقة تأمّلية",
         cards: [
-          { id: "c1", title: "Reflection 1", description: "First reflective paper from the practicum." },
-          { id: "c2", title: "Reflection 2", description: "Mid-term reflection on classroom practice." },
-          { id: "c3", title: "Reflection 3", description: "Final reflection summarizing growth." },
+          { id: "c1", title: "التأمّل الأول", description: "أول ورقة تأمّلية من التدريب الميداني." },
+          { id: "c2", title: "التأمّل الثاني", description: "تأمّل منتصف الفصل حول الممارسة الصفّية." },
+          { id: "c3", title: "التأمّل الثالث", description: "تأمّل ختامي يلخّص النمو والتطوّر." },
         ],
       },
     ],
     "tab2.main": [
-      { id: "unit1", title: "Developed Unit Plan 1", cards: [{ id: "u1", title: "Unit Plan", description: "Comprehensive art unit plan." }] },
-      { id: "axis1", title: "Reflective Paper for Axis 1", cards: [{ id: "a1", title: "Axis 1 Reflection", description: "" }] },
-      { id: "spec", title: "Specialized Reflective Papers", cards: [
-        { id: "s1", title: "Paper 1", description: "" },
-        { id: "s2", title: "Paper 2", description: "" },
-        { id: "s3", title: "Paper 3", description: "" },
+      { id: "unit1", title: "خطة وحدة دراسية مطوّرة", cards: [{ id: "u1", title: "خطة الوحدة", description: "خطة وحدة فنية شاملة." }] },
+      { id: "axis1", title: "ورقة تأمّلية للمحور الأول", cards: [{ id: "a1", title: "تأمّل المحور الأول", description: "" }] },
+      { id: "spec", title: "أوراق تأمّلية تخصّصية", cards: [
+        { id: "s1", title: "الورقة الأولى", description: "" },
+        { id: "s2", title: "الورقة الثانية", description: "" },
+        { id: "s3", title: "الورقة الثالثة", description: "" },
       ]},
     ],
     "tab2.other": [
-      { id: "curr", title: "Curriculum Course", cards: [] },
-      { id: "tm1", title: "Teaching Methods 1", cards: [] },
-      { id: "tm2", title: "Teaching Methods 2", cards: [] },
-      { id: "proj", title: "Major Projects", cards: [] },
+      { id: "curr", title: "مقرّر المناهج", cards: [] },
+      { id: "tm1", title: "طرائق التدريس 1", cards: [] },
+      { id: "tm2", title: "طرائق التدريس 2", cards: [] },
+      { id: "proj", title: "المشاريع الكبرى", cards: [] },
     ],
     "tab3.main": [
-      { id: "axisR", title: "Reflective Paper for the Axis", cards: [{ id: "x1", title: "Reflection", description: "" }] },
+      { id: "axisR", title: "ورقة تأمّلية للمحور", cards: [{ id: "x1", title: "تأمّل", description: "" }] },
     ],
     "tab3.g6": [
-      { id: "g6lessons", title: "Grade 6 Lessons", cards: [
-        { id: "l1", title: "Lesson 1", description: "Color theory introduction." },
+      { id: "g6lessons", title: "دروس الصف السادس", cards: [
+        { id: "l1", title: "الدرس الأول", description: "مدخل إلى نظرية الألوان." },
       ]},
     ],
     "tab3.g7": [
-      { id: "g7lessons", title: "Grade 7 Lessons", cards: [
-        { id: "l1", title: "Lesson 1", description: "Composition fundamentals." },
+      { id: "g7lessons", title: "دروس الصف السابع", cards: [
+        { id: "l1", title: "الدرس الأول", description: "أساسيات التكوين الفني." },
       ]},
     ],
     "tab3.extras": [
-      { id: "comp", title: "Comprehensive Reflective Paper", cards: [] },
-      { id: "peer", title: "Peer Visit Evidence", cards: [] },
-      { id: "parent", title: "Parent Communication Form", cards: [] },
+      { id: "comp", title: "ورقة تأمّلية شاملة", cards: [] },
+      { id: "peer", title: "شواهد الزيارات التبادلية", cards: [] },
+      { id: "parent", title: "نموذج التواصل مع أولياء الأمور", cards: [] },
     ],
     "tab4.main": [
-      { id: "axisR", title: "Reflective Paper for the Axis", cards: [] },
-      { id: "phil", title: "My Teaching Philosophy", cards: [] },
-      { id: "prof", title: "Professionalism Scenario-Based Assessment Tool", cards: [] },
-      { id: "att", title: "Attendance and Departure Record", cards: [] },
+      { id: "axisR", title: "ورقة تأمّلية للمحور", cards: [] },
+      { id: "phil", title: "فلسفتي في التدريس", cards: [] },
+      { id: "prof", title: "أداة تقييم المهنية القائمة على السيناريو", cards: [] },
+      { id: "att", title: "سجلّ الحضور والانصراف", cards: [] },
     ],
     "tab5.main": [
-      { id: "axisR", title: "Reflective Paper for the Axis", cards: [] },
-      { id: "action", title: "Action Research Project", cards: [] },
-      { id: "pd", title: "Professional Development Evidence", cards: [] },
-      { id: "workshop", title: "Art Workshop Plans", cards: [] },
+      { id: "axisR", title: "ورقة تأمّلية للمحور", cards: [] },
+      { id: "action", title: "مشروع البحث الإجرائي", cards: [] },
+      { id: "pd", title: "شواهد التطوير المهني", cards: [] },
+      { id: "workshop", title: "خطط ورش العمل الفنية", cards: [] },
     ],
     "tab5.prev": [
-      { id: "meas", title: "Measurement and Evaluation Project", cards: [] },
-      { id: "psych", title: "Psychology Project", cards: [] },
-      { id: "special", title: "Special Needs Learners Project", cards: [] },
-      { id: "exh", title: "Specialized Exhibitions", cards: [] },
+      { id: "meas", title: "مشروع القياس والتقويم", cards: [] },
+      { id: "psych", title: "مشروع علم النفس", cards: [] },
+      { id: "special", title: "مشروع المتعلّمين ذوي الاحتياجات الخاصة", cards: [] },
+      { id: "exh", title: "المعارض التخصّصية", cards: [] },
     ],
     "tab6.main": [
-      { id: "axisR", title: "Reflective Paper for the Axis", cards: [] },
-      { id: "tech", title: "Technology Integration in Teaching Plans and Lessons", cards: [] },
-      { id: "skills", title: "Software and Device Skills", cards: [] },
-      { id: "pres", title: "Distinguished Presentations", cards: [] },
-      { id: "ws", title: "Worksheets", cards: [] },
+      { id: "axisR", title: "ورقة تأمّلية للمحور", cards: [] },
+      { id: "tech", title: "توظيف التكنولوجيا في الخطط والدروس", cards: [] },
+      { id: "skills", title: "مهارات البرامج والأجهزة", cards: [] },
+      { id: "pres", title: "عروض متميّزة", cards: [] },
+      { id: "ws", title: "أوراق العمل", cards: [] },
     ],
   },
 };
 
 /* ----------------------------- Persistence ----------------------------- */
-const STORAGE_KEY = "portfolio-state-v1";
+const STORAGE_KEY = "portfolio-state-v2-ar";
 
 function loadState(): PortfolioState {
   if (typeof window === "undefined") return DEFAULT;
@@ -282,7 +280,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
                       ...s.cards,
                       {
                         id: crypto.randomUUID(),
-                        title: card?.title ?? "New item",
+                        title: card?.title ?? "عنصر جديد",
                         description: card?.description ?? "",
                         ...card,
                       },

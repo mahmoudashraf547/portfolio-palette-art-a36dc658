@@ -14,7 +14,7 @@ interface Props {
   compact?: boolean;
 }
 
-export function FileUploader({ value, onChange, label = "Upload file", accept, compact }: Props) {
+export function FileUploader({ value, onChange, label = "رفع ملف", accept, compact }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export function FileUploader({ value, onChange, label = "Upload file", accept, c
     if (!files || !files[0]) return;
     const f = files[0];
     if (f.size > MAX_SIZE) {
-      setErr(`File too large (max ${MAX_SIZE / 1024 / 1024} MB for in-browser storage).`);
+      setErr(`الملف كبير جداً (الحد الأقصى ${MAX_SIZE / 1024 / 1024} ميجابايت).`);
       return;
     }
     setErr(null);
@@ -60,7 +60,7 @@ export function FileUploader({ value, onChange, label = "Upload file", accept, c
       >
         <div className="flex items-center gap-2 text-violet">
           <Upload className="h-4 w-4" />
-          <span>{value ? `Replace: ${value.name}` : label}</span>
+          <span>{value ? `استبدال: ${value.name}` : label}</span>
         </div>
         <input
           ref={inputRef}
@@ -74,7 +74,7 @@ export function FileUploader({ value, onChange, label = "Upload file", accept, c
         <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
           <span className="truncate max-w-[70%]">{value.name}</span>
           <Button size="sm" variant="ghost" onClick={() => onChange(null)}>
-            <X className="h-3 w-3 mr-1" /> Remove
+            <X className="h-3 w-3 ml-1" /> إزالة
           </Button>
         </div>
       )}

@@ -34,8 +34,8 @@
   --color-violet: var(--violet);
   --color-skyblue: var(--skyblue);
   --color-deepblue: var(--deepblue);
-  --font-display: "Cairo", "Tajawal", system-ui, sans-serif;
-  --font-body: "Tajawal", "Cairo", system-ui, sans-serif;
+  --font-display: "Cairo", "Changa", "IBM Plex Sans Arabic", "Tajawal", system-ui, sans-serif;
+  --font-body: "Tajawal", "IBM Plex Sans Arabic", "Cairo", system-ui, sans-serif;
 }
 
 :root {
@@ -74,6 +74,8 @@
     background: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-body);
+    font-feature-settings: "kern", "liga", "calt";
+    line-height: 1.75;
     background-image:
       radial-gradient(at 10% 0%, oklch(0.92 0.08 290 / 0.6) 0px, transparent 50%),
       radial-gradient(at 90% 10%, oklch(0.88 0.08 240 / 0.5) 0px, transparent 50%),
@@ -81,7 +83,8 @@
     background-attachment: fixed;
     min-height: 100vh;
   }
-  h1,h2,h3,h4 { font-family: var(--font-display); letter-spacing: -0.01em; }
+  h1,h2,h3,h4 { font-family: var(--font-display); letter-spacing: 0; line-height: 1.4; }
+  [dir="rtl"] input, [dir="rtl"] textarea { text-align: right; }
 }
 
 @layer utilities {

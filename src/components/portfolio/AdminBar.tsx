@@ -26,15 +26,15 @@ export function AdminBar() {
       <>
         <button
           onClick={() => setLoginOpen(true)}
-          className="fixed bottom-5 right-5 z-50 h-12 w-12 rounded-full glass-strong text-violet shadow-lg hover:scale-110 transition flex items-center justify-center"
-          aria-label="Admin login"
+          className="fixed bottom-5 left-5 z-50 h-12 w-12 rounded-full glass-strong text-violet shadow-lg hover:scale-110 transition flex items-center justify-center"
+          aria-label="تسجيل الدخول"
         >
           <Lock className="h-5 w-5" />
         </button>
         <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
-          <DialogContent className="glass-strong max-w-sm">
+          <DialogContent className="glass-strong max-w-sm" dir="rtl">
             <DialogHeader>
-              <DialogTitle className="gradient-text">Admin Login</DialogTitle>
+              <DialogTitle className="gradient-text text-right">تسجيل الدخول</DialogTitle>
             </DialogHeader>
             <form
               onSubmit={(e) => {
@@ -45,28 +45,25 @@ export function AdminBar() {
                   setP("");
                   setErr(null);
                 } else {
-                  setErr("Invalid credentials");
+                  setErr("بيانات الدخول غير صحيحة");
                 }
               }}
               className="space-y-3"
             >
               <div>
-                <Label>Username</Label>
+                <Label>اسم المستخدم</Label>
                 <Input value={u} onChange={(e) => setU(e.target.value)} autoFocus />
               </div>
               <div>
-                <Label>Password</Label>
+                <Label>كلمة المرور</Label>
                 <Input type="password" value={p} onChange={(e) => setP(e.target.value)} />
               </div>
               {err && <p className="text-sm text-destructive">{err}</p>}
               <DialogFooter>
                 <Button type="submit" className="gradient-bg text-white">
-                  Sign in
+                  دخول
                 </Button>
               </DialogFooter>
-              <p className="text-xs text-muted-foreground text-center">
-                Demo credentials: admin / admin123
-              </p>
             </form>
           </DialogContent>
         </Dialog>
@@ -75,28 +72,28 @@ export function AdminBar() {
   }
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 glass-strong rounded-full pl-4 pr-2 py-2 shadow-xl">
-      <span className="text-xs font-medium text-violet hidden sm:inline">Admin</span>
+    <div className="fixed bottom-5 left-5 z-50 flex items-center gap-2 glass-strong rounded-full pl-2 pr-4 py-2 shadow-xl" dir="rtl">
+      <span className="text-xs font-medium text-violet hidden sm:inline">المدير</span>
       <Button
         size="sm"
         variant={editMode ? "default" : "outline"}
         className={editMode ? "gradient-bg text-white" : ""}
         onClick={() => setEditMode(!editMode)}
       >
-        {editMode ? <Eye className="h-3 w-3 mr-1" /> : <Pencil className="h-3 w-3 mr-1" />}
-        {editMode ? "Preview" : "Edit Website"}
+        {editMode ? <Eye className="h-3 w-3 ml-1" /> : <Pencil className="h-3 w-3 ml-1" />}
+        {editMode ? "معاينة" : "تحرير الموقع"}
       </Button>
       <Button
         size="icon"
         variant="ghost"
-        title="Reset to defaults"
+        title="إعادة التعيين للقيم الافتراضية"
         onClick={() => {
-          if (confirm("Reset ALL portfolio content to defaults? This cannot be undone.")) resetAll();
+          if (confirm("هل تريد إعادة تعيين كل محتوى الموقع؟ لا يمكن التراجع عن هذا الإجراء.")) resetAll();
         }}
       >
         <RotateCcw className="h-4 w-4" />
       </Button>
-      <Button size="icon" variant="ghost" onClick={logout} title="Logout">
+      <Button size="icon" variant="ghost" onClick={logout} title="تسجيل الخروج">
         <LogOut className="h-4 w-4" />
       </Button>
     </div>
@@ -108,7 +105,7 @@ export function EditModeIndicator() {
   if (!isAdmin || !editMode) return null;
   return (
     <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40 glass-strong rounded-full px-4 py-1.5 text-xs font-medium text-violet shadow flex items-center gap-2">
-      <Pencil className="h-3 w-3" /> Edit mode active — click any text or section to modify
+      <Pencil className="h-3 w-3" /> وضع التحرير مفعّل — انقر على أي نص أو قسم للتعديل
     </div>
   );
 }

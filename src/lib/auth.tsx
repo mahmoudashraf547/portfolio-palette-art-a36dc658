@@ -22,7 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (u: string, p: string) => {
-    if (u === "admin" && p === "admin123") {
+    if (u === "admin" && p === "rayan123") {
       localStorage.setItem(KEY, "1");
       setIsAdmin(true);
       return true;
