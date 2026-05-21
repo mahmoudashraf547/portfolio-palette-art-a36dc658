@@ -186,7 +186,7 @@ function CardBlock({
         <FilePreviewRenderer file={card.file} onClick={() => onPreview(card.file!)} />
       ) : (
         <div className="aspect-[3/4] rounded-xl border-2 border-dashed border-violet/30 bg-gradient-to-br from-lavender/30 to-skyblue/30 flex items-center justify-center text-violet text-sm">
-          {editable ? "Upload a file below" : "No file"}
+          {editable ? "ارفع ملفاً في الأسفل" : "لا يوجد ملف"}
         </div>
       )}
 
@@ -204,7 +204,7 @@ function CardBlock({
           <textarea
             value={card.description}
             onChange={(e) => updateCard({ description: e.target.value })}
-            placeholder="Description"
+            placeholder="الوصف"
             className="mt-1 w-full text-xs text-muted-foreground bg-transparent border-b border-dashed border-violet/20 focus:outline-none focus:border-violet/60 resize-none"
             rows={2}
           />
@@ -214,16 +214,16 @@ function CardBlock({
       </div>
 
       {editable ? (
-        <FileUploader value={card.file} onChange={setCardFile} compact label="Upload file" />
+        <FileUploader value={card.file} onChange={setCardFile} compact label="رفع ملف" />
       ) : card.file ? (
         <Button size="sm" variant="outline" onClick={() => onPreview(card.file!)}>
-          <Eye className="h-3 w-3 mr-1" /> Preview
+          <Eye className="h-3 w-3 ml-1" /> معاينة
         </Button>
       ) : null}
 
       {editable && (
         <Button size="sm" variant="ghost" className="text-destructive" onClick={removeCard}>
-          <Trash2 className="h-3 w-3 mr-1" /> Delete
+          <Trash2 className="h-3 w-3 ml-1" /> حذف
         </Button>
       )}
     </div>
