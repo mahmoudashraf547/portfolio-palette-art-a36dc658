@@ -74,7 +74,7 @@ export function FileUploader({ value, onChange, label = "رفع ملف", accept,
         <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
           <span className="truncate max-w-[70%]">{value.name}</span>
           <Button size="sm" variant="ghost" onClick={() => onChange(null)}>
-            <X className="h-3 w-3 mr-1" /> Remove
+            <X className="h-3 w-3 ml-1" /> إزالة
           </Button>
         </div>
       )}
