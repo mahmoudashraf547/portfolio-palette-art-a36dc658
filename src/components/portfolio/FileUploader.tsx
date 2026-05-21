@@ -60,7 +60,7 @@ export function FileUploader({ value, onChange, label = "رفع ملف", accept,
       >
         <div className="flex items-center gap-2 text-violet">
           <Upload className="h-4 w-4" />
-          <span>{value ? `Replace: ${value.name}` : label}</span>
+          <span>{value ? `استبدال: ${value.name}` : label}</span>
         </div>
         <input
           ref={inputRef}
