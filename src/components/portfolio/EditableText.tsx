@@ -88,7 +88,7 @@ export function EditableText({
         style={style}
         data-placeholder={placeholder}
       >
-        {val.text || (editable ? placeholder || "Click to edit…" : "")}
+        {val.text || (editable ? placeholder || "انقر للتعديل…" : "")}
       </TagAny>
       {editable && (
         <Popover open={open} onOpenChange={setOpen}>
