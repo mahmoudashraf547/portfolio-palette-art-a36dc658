@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { StoredFile } from "@/lib/portfolio-store";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   generatePdfThumbnail,
   getCachedThumb,
+  getPdfBytes,
   getPdfjs,
 } from "@/lib/pdf-utils";
 
