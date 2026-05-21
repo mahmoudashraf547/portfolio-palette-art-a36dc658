@@ -183,6 +183,15 @@ const DEFAULT: PortfolioState = {
       { id: "ws", title: "أوراق العمل", cards: [] },
     ],
   },
+  tabs: [
+    { id: "home", label: "الرئيسية", type: "home" },
+    { id: "tab2", label: "الكفاية الأكاديمية", type: "tab2" },
+    { id: "tab3", label: "التنوّع", type: "tab3" },
+    { id: "tab4", label: "القيم المهنية", type: "tab4" },
+    { id: "tab5", label: "البحث والتعلّم", type: "tab5" },
+    { id: "tab6", label: "التكنولوجيا", type: "tab6" },
+    { id: "contact", label: "تواصل", type: "contact" },
+  ],
 };
 
 /* ----------------------------- Persistence ----------------------------- */
