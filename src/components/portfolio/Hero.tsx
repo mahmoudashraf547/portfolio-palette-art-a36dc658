@@ -33,14 +33,14 @@ export function Hero({ onEnter }: { onEnter: () => void }) {
                 <FileUploader
                   value={logo}
                   onChange={(f) => setFile("hero.logo", f)}
-                  label="Upload logo"
+                  label="رفع الشعار"
                   accept="image/*"
                   compact
                 />
               </div>
             )}
           </div>
-          <div className="text-center lg:text-left">
+          <div className="text-center lg:text-right">
             <div className="inline-flex items-center gap-1 glass rounded-full px-3 py-1 text-xs text-violet mb-4">
               <Sparkles className="h-3 w-3" /> <EditableText tkey="site.major" as="span" />
             </div>
@@ -71,7 +71,7 @@ export function Hero({ onEnter }: { onEnter: () => void }) {
                 onClick={onEnter}
                 className="gradient-bg text-white rounded-full px-8 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition"
               >
-                <EditableText tkey="hero.cta" as="span" /> <ArrowRight className="h-4 w-4 ml-2" />
+                <EditableText tkey="hero.cta" as="span" /> <ArrowRight className="h-4 w-4 mr-2 rtl:rotate-180" />
               </Button>
             </div>
           </div>
