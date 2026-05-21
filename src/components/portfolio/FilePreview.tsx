@@ -136,12 +136,40 @@ export function PdfPreviewModal({
 }) {
   const [numPages, setNumPages] = useState(0);
   const [width, setWidth] = useState(900);
+  const [bytes, setBytes] = useState<Uint8Array | null>(null);
+  const [loadErr, setLoadErr] = useState<string | null>(null);
+
   useEffect(() => {
     const u = () => setWidth(Math.min(900, window.innerWidth - 80));
     u();
     window.addEventListener("resize", u);
     return () => window.removeEventListener("resize", u);
   }, []);
+
+  // Preload bytes once per file id so react-pdf gets a stable reference.
+  useEffect(() => {
+    if (!open || !file) return;
+    setBytes(null);
+    setNumPages(0);
+    setLoadErr(null);
+    let cancelled = false;
+    getPdfBytes(file)
+      .then((b) => {
+        if (!cancelled) setBytes(b);
+      })
+      .catch((e) => {
+        if (!cancelled) setLoadErr(e?.message || "تعذّر تحميل المستند");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, file?.id]);
+
+  // react-pdf compares file by reference; memoize the wrapper object.
+  const fileProp = useMemo(
+    () => (bytes ? { data: bytes.slice(0) } : null),
+    [bytes]
+  );
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -169,24 +197,35 @@ export function PdfPreviewModal({
           </div>
         </div>
         <div className="overflow-auto h-[calc(92vh-56px)] bg-gradient-to-br from-lavender/20 to-skyblue/20 p-4 flex flex-col items-center gap-4">
-          {file && (
+          {loadErr && (
+            <div className="text-destructive text-sm pt-8">{loadErr}</div>
+          )}
+          {!loadErr && !fileProp && (
+            <div className="flex flex-col items-center gap-3 text-violet pt-8">
+              <Loader2 className="h-6 w-6 animate-spin" />
+              <span className="text-sm">جاري تحميل المستند…</span>
+              <Skeleton className="w-[80%] max-w-[600px] h-[800px]" />
+            </div>
+          )}
+          {fileProp && (
             <Suspense
               fallback={
                 <div className="flex flex-col items-center gap-3 text-violet pt-8">
                   <Loader2 className="h-6 w-6 animate-spin" />
-                  <span className="text-sm">جاري تحميل المستند…</span>
-                  <Skeleton className="w-[80%] max-w-[600px] h-[800px]" />
+                  <span className="text-sm">جاري عرض المستند…</span>
                 </div>
               }
             >
               <PdfDoc
-                file={file.dataUrl}
+                file={fileProp}
                 onLoadSuccess={(d: any) => setNumPages(d.numPages)}
+                onLoadError={(e: any) =>
+                  setLoadErr(e?.message || "تعذّر تحميل المستند")
+                }
                 loading={
                   <div className="flex flex-col items-center gap-3 text-violet pt-8">
                     <Loader2 className="h-6 w-6 animate-spin" />
-                    <span className="text-sm">جاري تحميل المستند…</span>
-                    <Skeleton className="w-[80%] max-w-[600px] h-[800px]" />
+                    <span className="text-sm">جاري عرض المستند…</span>
                   </div>
                 }
                 error={<div className="text-destructive">تعذّر تحميل المستند.</div>}
