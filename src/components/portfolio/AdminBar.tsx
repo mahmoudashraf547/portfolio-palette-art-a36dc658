@@ -32,9 +32,9 @@ export function AdminBar() {
           <Lock className="h-5 w-5" />
         </button>
         <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
-          <DialogContent className="glass-strong max-w-sm">
+          <DialogContent className="glass-strong max-w-sm" dir="rtl">
             <DialogHeader>
-              <DialogTitle className="gradient-text">Admin Login</DialogTitle>
+              <DialogTitle className="gradient-text text-right">تسجيل الدخول</DialogTitle>
             </DialogHeader>
             <form
               onSubmit={(e) => {
@@ -45,28 +45,25 @@ export function AdminBar() {
                   setP("");
                   setErr(null);
                 } else {
-                  setErr("Invalid credentials");
+                  setErr("بيانات الدخول غير صحيحة");
                 }
               }}
               className="space-y-3"
             >
               <div>
-                <Label>Username</Label>
+                <Label>اسم المستخدم</Label>
                 <Input value={u} onChange={(e) => setU(e.target.value)} autoFocus />
               </div>
               <div>
-                <Label>Password</Label>
+                <Label>كلمة المرور</Label>
                 <Input type="password" value={p} onChange={(e) => setP(e.target.value)} />
               </div>
               {err && <p className="text-sm text-destructive">{err}</p>}
               <DialogFooter>
                 <Button type="submit" className="gradient-bg text-white">
-                  Sign in
+                  دخول
                 </Button>
               </DialogFooter>
-              <p className="text-xs text-muted-foreground text-center">
-                Demo credentials: admin / admin123
-              </p>
             </form>
           </DialogContent>
         </Dialog>
