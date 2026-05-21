@@ -25,9 +25,34 @@ export interface PdfThumb {
 
 const cache = new Map<string, PdfThumb>();
 const inflight = new Map<string, Promise<PdfThumb>>();
+const bytesCache = new Map<string, Uint8Array>();
+const bytesInflight = new Map<string, Promise<Uint8Array>>();
 
 export function getCachedThumb(file: StoredFile): PdfThumb | null {
   return cache.get(file.id) ?? null;
+}
+
+/** Fetch the file's raw bytes once and cache. react-pdf re-uses the buffer
+ *  reference, which avoids the "Unable to load document" race that happens
+ *  when a base64 dataUrl gets re-parsed on every render. */
+export async function getPdfBytes(file: StoredFile): Promise<Uint8Array> {
+  const hit = bytesCache.get(file.id);
+  if (hit) return hit;
+  const existing = bytesInflight.get(file.id);
+  if (existing) return existing;
+  const p = (async () => {
+    const res = await fetch(file.dataUrl);
+    const buf = await res.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    bytesCache.set(file.id, bytes);
+    return bytes;
+  })();
+  bytesInflight.set(file.id, p);
+  try {
+    return await p;
+  } finally {
+    bytesInflight.delete(file.id);
+  }
 }
 
 export async function generatePdfThumbnail(
