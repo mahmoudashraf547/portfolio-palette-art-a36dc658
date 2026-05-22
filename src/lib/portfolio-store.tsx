@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { ensureObjectUrl, deleteBlob } from "@/lib/file-storage";
 
 /* ----------------------------- Types ----------------------------- */
 export type FileKind = "pdf" | "docx" | "pptx" | "image" | "video" | "other";
