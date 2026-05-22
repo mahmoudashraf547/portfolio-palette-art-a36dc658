@@ -1,5 +1,6 @@
-// Centralized pdf.js loader + thumbnail generator with caching.
+// Centralized pdf.js loader + rendering helpers with one explicit Vite-bundled worker.
 import type { StoredFile } from "@/lib/portfolio-store";
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 let pdfjsPromise: Promise<typeof import("pdfjs-dist")> | null = null;
 
@@ -8,10 +9,7 @@ export async function getPdfjs() {
   if (!pdfjsPromise) {
     pdfjsPromise = (async () => {
       const pdfjs = await import("pdfjs-dist");
-      const workerSrc = (
-        await import("pdfjs-dist/build/pdf.worker.min.mjs?url" as string)
-      ).default as string;
-      pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+      pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
       return pdfjs;
     })();
   }
@@ -27,14 +25,14 @@ const cache = new Map<string, PdfThumb>();
 const inflight = new Map<string, Promise<PdfThumb>>();
 const bytesCache = new Map<string, Uint8Array>();
 const bytesInflight = new Map<string, Promise<Uint8Array>>();
+const pageCountCache = new Map<string, number>();
 
 export function getCachedThumb(file: StoredFile): PdfThumb | null {
   return cache.get(file.id) ?? null;
 }
 
-/** Fetch the file's raw bytes once and cache. react-pdf re-uses the buffer
- *  reference, which avoids the "Unable to load document" race that happens
- *  when a base64 dataUrl gets re-parsed on every render. */
+/** Fetch the file's raw bytes once and cache them so every PDF operation uses
+ *  a stable buffer instead of reparsing the base64 data URL on each render. */
 export async function getPdfBytes(file: StoredFile): Promise<Uint8Array> {
   const hit = bytesCache.get(file.id);
   if (hit) return hit;
@@ -68,7 +66,7 @@ export async function generatePdfThumbnail(
     const pdfjs = await getPdfjs();
     const bytes = await getPdfBytes(file);
     // pdf.js takes ownership of the buffer; pass a copy so the cached array
-    // stays intact for later use by react-pdf.
+    // stays intact for later page-count and canvas rendering.
     const doc = await pdfjs.getDocument({ data: bytes.slice(0) }).promise;
     const page = await doc.getPage(1);
 
@@ -104,4 +102,48 @@ export async function generatePdfThumbnail(
   } finally {
     inflight.delete(file.id);
   }
+}
+
+export async function getPdfPageCount(file: StoredFile): Promise<number> {
+  const hit = pageCountCache.get(file.id);
+  if (hit) return hit;
+  const pdfjs = await getPdfjs();
+  const bytes = await getPdfBytes(file);
+  const doc = await pdfjs.getDocument({ data: bytes.slice(0) }).promise;
+  const pages = doc.numPages;
+  pageCountCache.set(file.id, pages);
+  await doc.cleanup();
+  doc.destroy();
+  return pages;
+}
+
+export async function renderPdfPageToCanvas(
+  file: StoredFile,
+  pageNumber: number,
+  canvas: HTMLCanvasElement,
+  targetWidth: number
+): Promise<void> {
+  const pdfjs = await getPdfjs();
+  const bytes = await getPdfBytes(file);
+  const doc = await pdfjs.getDocument({ data: bytes.slice(0) }).promise;
+  const page = await doc.getPage(pageNumber);
+  const baseViewport = page.getViewport({ scale: 1 });
+  const outputScale = Math.min(window.devicePixelRatio || 1, 2);
+  const cssWidth = Math.max(280, Math.floor(targetWidth));
+  const scale = cssWidth / baseViewport.width;
+  const viewport = page.getViewport({ scale: scale * outputScale });
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas 2D unavailable");
+
+  canvas.width = Math.floor(viewport.width);
+  canvas.height = Math.floor(viewport.height);
+  canvas.style.width = `${cssWidth}px`;
+  canvas.style.height = `${Math.floor(viewport.height / outputScale)}px`;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  await page.render({ canvasContext: ctx, viewport, canvas } as any).promise;
+  page.cleanup();
+  await doc.cleanup();
+  doc.destroy();
 }
