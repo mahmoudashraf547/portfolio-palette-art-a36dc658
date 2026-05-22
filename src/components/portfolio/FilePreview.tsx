@@ -151,7 +151,7 @@ export function PdfPreviewModal({
 }) {
   const [numPages, setNumPages] = useState(0);
   const [width, setWidth] = useState(900);
-  const [bytes, setBytes] = useState<Uint8Array | null>(null);
+  const [loading, setLoading] = useState(false);
   const [loadErr, setLoadErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -161,30 +161,27 @@ export function PdfPreviewModal({
     return () => window.removeEventListener("resize", u);
   }, []);
 
-  // Preload bytes once per file id so react-pdf gets a stable reference.
+  // Initialize pdf.js worker first, then inspect the document before page rendering.
   useEffect(() => {
     if (!open || !file) return;
-    setBytes(null);
+    setLoading(true);
     setNumPages(0);
     setLoadErr(null);
     let cancelled = false;
-    getPdfBytes(file)
-      .then((b) => {
-        if (!cancelled) setBytes(b);
+    getPdfPageCount(file)
+      .then((pages) => {
+        if (!cancelled) setNumPages(pages);
       })
-      .catch((e) => {
+      .catch((e: any) => {
         if (!cancelled) setLoadErr(e?.message || "تعذّر تحميل المستند");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
     };
   }, [open, file?.id]);
-
-  // react-pdf compares file by reference; memoize the wrapper object.
-  const fileProp = useMemo(
-    () => (bytes ? { data: bytes.slice(0) } : null),
-    [bytes]
-  );
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -215,41 +212,25 @@ export function PdfPreviewModal({
           {loadErr && (
             <div className="text-destructive text-sm pt-8">{loadErr}</div>
           )}
-          {!loadErr && !fileProp && (
+          {!loadErr && loading && (
             <div className="flex flex-col items-center gap-3 text-violet pt-8">
               <Loader2 className="h-6 w-6 animate-spin" />
               <span className="text-sm">جاري تحميل المستند…</span>
               <Skeleton className="w-[80%] max-w-[600px] h-[800px]" />
             </div>
           )}
-          {fileProp && (
-            <Suspense
-              fallback={
-                <div className="flex flex-col items-center gap-3 text-violet pt-8">
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                  <span className="text-sm">جاري عرض المستند…</span>
-                </div>
-              }
-            >
-              <PdfDoc
-                file={fileProp}
-                onLoadSuccess={(d: any) => setNumPages(d.numPages)}
-                onLoadError={(e: any) =>
-                  setLoadErr(e?.message || "تعذّر تحميل المستند")
-                }
-                loading={
-                  <div className="flex flex-col items-center gap-3 text-violet pt-8">
-                    <Loader2 className="h-6 w-6 animate-spin" />
-                    <span className="text-sm">جاري عرض المستند…</span>
-                  </div>
-                }
-                error={<div className="text-destructive">تعذّر تحميل المستند.</div>}
-              >
-                {Array.from({ length: numPages }, (_, i) => (
-                  <LazyPdfPage key={i} pageNumber={i + 1} width={width} />
-                ))}
-              </PdfDoc>
-            </Suspense>
+          {!loadErr && file && numPages > 0 && (
+            <>
+              {Array.from({ length: numPages }, (_, i) => (
+                <LazyPdfPage
+                  key={i}
+                  file={file}
+                  pageNumber={i + 1}
+                  width={width}
+                  onError={setLoadErr}
+                />
+              ))}
+            </>
           )}
         </div>
       </DialogContent>
