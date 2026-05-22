@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { StoredFile } from "@/lib/portfolio-store";
 import { Button } from "@/components/ui/button";
@@ -7,19 +7,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   generatePdfThumbnail,
   getCachedThumb,
-  getPdfBytes,
-  getPdfjs,
+  getPdfPageCount,
+  renderPdfPageToCanvas,
 } from "@/lib/pdf-utils";
-
-const PdfDoc = lazy(async () => {
-  await getPdfjs(); // ensures worker is registered before react-pdf uses it
-  const m = await import("react-pdf");
-  return { default: m.Document };
-});
-const PdfPage = lazy(async () => {
-  const m = await import("react-pdf");
-  return { default: m.Page };
-});
 
 /* ---------------- PDF Thumbnail ---------------- */
 export function PdfThumbnail({ file, onClick }: { file: StoredFile; onClick?: () => void }) {
