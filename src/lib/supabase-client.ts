@@ -1,15 +1,24 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn(
-    "Supabase credentials not found. Set SUPABASE_URL and SUPABASE_ANON_KEY in .env.local"
+    "Supabase credentials not found. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local or SUPABASE_URL and SUPABASE_ANON_KEY in the deployed environment."
   );
 }
 
 export const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "");
+
+function buildSupabasePublicUrl(bucket: string, path: string) {
+  const baseUrl = (supabaseUrl || "").replace(/\/$/, "");
+  const encodedPath = path
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+  return `${baseUrl}/storage/v1/object/public/${encodeURIComponent(bucket)}/${encodedPath}`;
+}
 
 export async function uploadFileToSupabase(
   fileId: string,
@@ -35,8 +44,10 @@ export async function uploadFileToSupabase(
       .from(bucket)
       .getPublicUrl(data.path);
 
+    const publicUrl = urlData.publicUrl || buildSupabasePublicUrl(bucket, data.path);
+
     return {
-      url: urlData.publicUrl,
+      url: publicUrl,
       key: data.path,
     };
   } catch (error: any) {
@@ -57,6 +68,17 @@ export async function deleteFileFromSupabase(key: string): Promise<void> {
   }
 }
 
+/**
+ * Load public metadata for uploaded files.
+ *
+ * If Row Level Security (RLS) is enabled on `uploaded_files`, make sure
+ * anonymous users are allowed to select rows from the table.
+ * Example SQL:
+ *
+ * CREATE POLICY "Public read access" ON public.uploaded_files
+ *   FOR SELECT
+ *   USING (auth.role() = 'anon');
+ */
 export async function loadFilesFromSupabase(): Promise<
   Array<{ file_id: string; file_name: string; storage_url: string; file_kind: string; file_size: number }>
 > {
