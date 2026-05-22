@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { ensureObjectUrl } from "@/lib/file-storage";
 
 /* ----------------------------- Types ----------------------------- */
 export type FileKind = "pdf" | "docx" | "pptx" | "image" | "video" | "other";
@@ -195,7 +196,57 @@ const DEFAULT: PortfolioState = {
 };
 
 /* ----------------------------- Persistence ----------------------------- */
-const STORAGE_KEY = "portfolio-state-v3-ar";
+const STORAGE_KEY = "portfolio-state-v4-ar";
+
+// Strip volatile blob: URLs before persisting; they're rehydrated from IndexedDB.
+function sanitize(state: PortfolioState): PortfolioState {
+  const stripFile = (f?: StoredFile) => (f ? { ...f, dataUrl: "" } : f);
+  const stripSections = (list: Section[] = []) =>
+    list.map((s) => ({
+      ...s,
+      cards: s.cards.map((c) => ({ ...c, file: stripFile(c.file) as StoredFile | undefined })),
+    }));
+  const files: Record<string, StoredFile> = {};
+  for (const [k, v] of Object.entries(state.files)) files[k] = { ...v, dataUrl: "" };
+  const sections: Record<string, Section[]> = {};
+  for (const [k, v] of Object.entries(state.sections)) sections[k] = stripSections(v);
+  return { ...state, files, sections };
+}
+
+function collectFileIds(state: PortfolioState): string[] {
+  const ids = new Set<string>();
+  for (const f of Object.values(state.files)) if (f?.id) ids.add(f.id);
+  for (const list of Object.values(state.sections))
+    for (const s of list)
+      for (const c of s.cards) if (c.file?.id) ids.add(c.file.id);
+  return [...ids];
+}
+
+async function rehydrate(state: PortfolioState): Promise<PortfolioState> {
+  const ids = collectFileIds(state);
+  const urls = new Map<string, string>();
+  await Promise.all(
+    ids.map(async (id) => {
+      const url = await ensureObjectUrl(id);
+      if (url) urls.set(id, url);
+    })
+  );
+  const apply = (f?: StoredFile) =>
+    f ? ({ ...f, dataUrl: urls.get(f.id) || f.dataUrl } as StoredFile) : f;
+  const files: Record<string, StoredFile> = {};
+  for (const [k, v] of Object.entries(state.files)) {
+    const u = apply(v);
+    if (u) files[k] = u;
+  }
+  const sections: Record<string, Section[]> = {};
+  for (const [k, list] of Object.entries(state.sections)) {
+    sections[k] = list.map((s) => ({
+      ...s,
+      cards: s.cards.map((c) => ({ ...c, file: apply(c.file) })),
+    }));
+  }
+  return { ...state, files, sections };
+}
 
 function loadState(): PortfolioState {
   if (typeof window === "undefined") return DEFAULT;
@@ -247,13 +298,14 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<PortfolioState>(DEFAULT);
 
   useEffect(() => {
-    setState(loadState());
+    const initial = loadState();
+    rehydrate(initial).then(setState).catch(() => setState(initial));
   }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitize(state)));
     } catch (e) {
       console.warn("Failed to persist portfolio state:", e);
     }

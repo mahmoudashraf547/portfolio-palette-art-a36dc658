@@ -1,15 +1,24 @@
-// Centralized pdf.js loader + rendering helpers with one explicit Vite-bundled worker.
+// Centralized pdf.js loader + rendering helpers.
+// Worker is loaded from a CDN that matches the installed pdfjs-dist version,
+// which avoids the "fake worker" / module-specifier failures that occur when
+// bundlers cannot resolve the .mjs worker entry in production.
 import type { StoredFile } from "@/lib/portfolio-store";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
-let pdfjsPromise: Promise<typeof import("pdfjs-dist")> | null = null;
+type Pdfjs = typeof import("pdfjs-dist");
+type PDFDocumentProxy = Awaited<ReturnType<Pdfjs["getDocument"]>["promise"]>;
 
-export async function getPdfjs() {
+let pdfjsPromise: Promise<Pdfjs> | null = null;
+
+export async function getPdfjs(): Promise<Pdfjs> {
   if (typeof window === "undefined") throw new Error("pdf.js is client-only");
   if (!pdfjsPromise) {
     pdfjsPromise = (async () => {
       const pdfjs = await import("pdfjs-dist");
-      pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+      const version = (pdfjs as any).version as string;
+      // unpkg serves the exact matching worker for the installed version,
+      // both in dev and in production builds (no bundler resolution required).
+      pdfjs.GlobalWorkerOptions.workerSrc =
+        `https://unpkg.com/pdfjs-dist@${version}/build/pdf.worker.min.mjs`;
       return pdfjs;
     })();
   }
@@ -21,57 +30,57 @@ export interface PdfThumb {
   pages: number;
 }
 
-const cache = new Map<string, PdfThumb>();
-const inflight = new Map<string, Promise<PdfThumb>>();
-const bytesCache = new Map<string, Uint8Array>();
-const bytesInflight = new Map<string, Promise<Uint8Array>>();
-const pageCountCache = new Map<string, number>();
+const thumbCache = new Map<string, PdfThumb>();
+const thumbInflight = new Map<string, Promise<PdfThumb>>();
+const docCache = new Map<string, Promise<PDFDocumentProxy>>();
 
 export function getCachedThumb(file: StoredFile): PdfThumb | null {
-  return cache.get(file.id) ?? null;
+  return thumbCache.get(file.id) ?? null;
 }
 
-/** Fetch the file's raw bytes once and cache them so every PDF operation uses
- *  a stable buffer instead of reparsing the base64 data URL on each render. */
-export async function getPdfBytes(file: StoredFile): Promise<Uint8Array> {
-  const hit = bytesCache.get(file.id);
+/** Open (and cache) the PDF document for a given stored file. The same
+ *  document instance is shared across the thumbnail, page count and all
+ *  page renders, which avoids redundant network/parse work. */
+function openDoc(file: StoredFile): Promise<PDFDocumentProxy> {
+  const hit = docCache.get(file.id);
   if (hit) return hit;
-  const existing = bytesInflight.get(file.id);
-  if (existing) return existing;
   const p = (async () => {
-    const res = await fetch(file.dataUrl);
-    const buf = await res.arrayBuffer();
-    const bytes = new Uint8Array(buf);
-    bytesCache.set(file.id, bytes);
-    return bytes;
+    const pdfjs = await getPdfjs();
+    return pdfjs.getDocument({ url: file.dataUrl, disableAutoFetch: true, disableStream: false })
+      .promise;
   })();
-  bytesInflight.set(file.id, p);
-  try {
-    return await p;
-  } finally {
-    bytesInflight.delete(file.id);
-  }
+  docCache.set(file.id, p);
+  p.catch(() => docCache.delete(file.id));
+  return p;
+}
+
+export function disposeDoc(fileId: string) {
+  const p = docCache.get(fileId);
+  if (!p) return;
+  docCache.delete(fileId);
+  p.then((d) => d.destroy()).catch(() => {});
+  thumbCache.delete(fileId);
+}
+
+export async function getPdfPageCount(file: StoredFile): Promise<number> {
+  const doc = await openDoc(file);
+  return doc.numPages;
 }
 
 export async function generatePdfThumbnail(
   file: StoredFile,
-  maxWidth = 480
+  maxWidth = 360
 ): Promise<PdfThumb> {
-  const hit = cache.get(file.id);
+  const hit = thumbCache.get(file.id);
   if (hit) return hit;
-  const existing = inflight.get(file.id);
+  const existing = thumbInflight.get(file.id);
   if (existing) return existing;
 
   const promise = (async () => {
-    const pdfjs = await getPdfjs();
-    const bytes = await getPdfBytes(file);
-    // pdf.js takes ownership of the buffer; pass a copy so the cached array
-    // stays intact for later page-count and canvas rendering.
-    const doc = await pdfjs.getDocument({ data: bytes.slice(0) }).promise;
+    const doc = await openDoc(file);
     const page = await doc.getPage(1);
-
     const baseViewport = page.getViewport({ scale: 1 });
-    const scale = Math.min(2, maxWidth / baseViewport.width);
+    const scale = Math.min(1.5, maxWidth / baseViewport.width);
     const viewport = page.getViewport({ scale });
 
     const canvas = document.createElement("canvas");
@@ -79,71 +88,48 @@ export async function generatePdfThumbnail(
     canvas.height = Math.floor(viewport.height);
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Canvas 2D unavailable");
-
-    // Fill white background to avoid transparent thumbnails
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     await page.render({ canvasContext: ctx, viewport, canvas } as any).promise;
-
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.75);
     const result: PdfThumb = { dataUrl, pages: doc.numPages };
-    cache.set(file.id, result);
-    // free resources
+    thumbCache.set(file.id, result);
     page.cleanup();
-    await doc.cleanup();
-    doc.destroy();
     return result;
   })();
 
-  inflight.set(file.id, promise);
+  thumbInflight.set(file.id, promise);
   try {
     return await promise;
   } finally {
-    inflight.delete(file.id);
+    thumbInflight.delete(file.id);
   }
-}
-
-export async function getPdfPageCount(file: StoredFile): Promise<number> {
-  const hit = pageCountCache.get(file.id);
-  if (hit) return hit;
-  const pdfjs = await getPdfjs();
-  const bytes = await getPdfBytes(file);
-  const doc = await pdfjs.getDocument({ data: bytes.slice(0) }).promise;
-  const pages = doc.numPages;
-  pageCountCache.set(file.id, pages);
-  await doc.cleanup();
-  doc.destroy();
-  return pages;
 }
 
 export async function renderPdfPageToCanvas(
   file: StoredFile,
   pageNumber: number,
   canvas: HTMLCanvasElement,
-  targetWidth: number
+  targetCssWidth: number
 ): Promise<void> {
-  const pdfjs = await getPdfjs();
-  const bytes = await getPdfBytes(file);
-  const doc = await pdfjs.getDocument({ data: bytes.slice(0) }).promise;
+  const doc = await openDoc(file);
   const page = await doc.getPage(pageNumber);
   const baseViewport = page.getViewport({ scale: 1 });
-  const outputScale = Math.min(window.devicePixelRatio || 1, 2);
-  const cssWidth = Math.max(280, Math.floor(targetWidth));
-  const scale = cssWidth / baseViewport.width;
-  const viewport = page.getViewport({ scale: scale * outputScale });
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const cssWidth = Math.max(280, Math.floor(targetCssWidth));
+  const cssScale = cssWidth / baseViewport.width;
+  const viewport = page.getViewport({ scale: cssScale * dpr });
+
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D unavailable");
-
   canvas.width = Math.floor(viewport.width);
   canvas.height = Math.floor(viewport.height);
   canvas.style.width = `${cssWidth}px`;
-  canvas.style.height = `${Math.floor(viewport.height / outputScale)}px`;
+  canvas.style.height = `${Math.floor(viewport.height / dpr)}px`;
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   await page.render({ canvasContext: ctx, viewport, canvas } as any).promise;
   page.cleanup();
-  await doc.cleanup();
-  doc.destroy();
 }
