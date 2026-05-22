@@ -60,12 +60,6 @@ export interface PortfolioState {
   files: Record<string, StoredFile>; // for hero logo, etc.
   sections: Record<string, Section[]>; // key = tab/area id
   tabs: TabConfig[];
-  social?: {
-    facebook?: string;
-    linkedin?: string;
-    twitter?: string;
-    instagram?: string;
-  };
 }
 
 /* ----------------------------- Defaults ----------------------------- */
@@ -119,12 +113,6 @@ const DEFAULT: PortfolioState = {
     "contact.phone": t("97550512"),
   },
   files: {},
-  social: {
-    facebook: "",
-    linkedin: "",
-    twitter: "",
-    instagram: "",
-  },
   sections: {
     "home.reflective": [
       {
@@ -225,7 +213,6 @@ function sanitize(state: PortfolioState): PortfolioState {
   return { ...state, files, sections };
 }
 
-
 function collectFileIds(state: PortfolioState): string[] {
   const ids = new Set<string>();
   for (const f of Object.values(state.files)) if (f?.id) ids.add(f.id);
@@ -271,7 +258,6 @@ function loadState(): PortfolioState {
       texts: { ...DEFAULT.texts, ...(parsed.texts || {}) },
       files: { ...DEFAULT.files, ...(parsed.files || {}) },
       sections: { ...DEFAULT.sections, ...(parsed.sections || {}) },
-      social: { ...DEFAULT.social, ...(parsed.social || {}) },
       tabs: Array.isArray(parsed.tabs) && parsed.tabs.length ? parsed.tabs : DEFAULT.tabs,
     };
   } catch {
@@ -304,7 +290,6 @@ interface PortfolioContextValue {
   moveTab: (id: string, dir: -1 | 1) => void;
   toggleTabHidden: (id: string) => void;
   resetAll: () => void;
-  setSocialLinks: (links: { facebook?: string; linkedin?: string; twitter?: string; instagram?: string }) => void;
 }
 
 const PortfolioContext = createContext<PortfolioContextValue | null>(null);
@@ -473,7 +458,6 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
             tabs: s.tabs.map((t) => (t.id === id ? { ...t, hidden: !t.hidden } : t)),
           })),
         resetAll: () => setState(DEFAULT),
-        setSocialLinks: (links) => setState((s) => ({ ...s, social: { ...(s.social || {}), ...links } })),
       }}
     >
       {children}

@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Facebook, Instagram, Linkedin, Mail, Phone, Send, Trash2, Twitter } from "lucide-react";
-import { usePortfolio } from "@/lib/portfolio-store";
 import { toast } from "sonner";
 
 interface Message {
@@ -23,7 +22,6 @@ export function Contact() {
   const [email, setEmail] = useState("");
   const [text, setText] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-  const { state } = usePortfolio();
 
   useEffect(() => {
     try {
@@ -39,7 +37,7 @@ export function Contact() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !text.trim()) {
-      toast.error("يرجى إضافة اسمك ورسالة.");
+      toast.error("Please add your name and a message.");
       return;
     }
     const msg: Message = {
@@ -53,11 +51,11 @@ export function Contact() {
     setName("");
     setEmail("");
     setText("");
-    toast.success("تم إرسال الرسالة. شكرًا لك!");
+    toast.success("Message sent. Thank you!");
   };
 
   return (
-    <div className="space-y-8 page-section" dir="rtl">
+    <div className="space-y-8">
       <div className="text-center max-w-2xl mx-auto">
         <EditableText
           tkey="contact.title"
@@ -74,7 +72,7 @@ export function Contact() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="glass-strong rounded-2xl p-6 space-y-4">
-          <h3 className="font-semibold text-lg gradient-text">معلومات التواصل</h3>
+          <h3 className="font-semibold text-lg gradient-text">Contact Information</h3>
           <a href="mailto:rayyanalnabhani23@gmail.com" className="flex items-center gap-3 group">
             <span className="h-10 w-10 rounded-xl gradient-bg text-white grid place-items-center">
               <Mail className="h-4 w-4" />
@@ -92,31 +90,15 @@ export function Contact() {
             </span>
           </a>
           <div className="flex gap-2 pt-2">
-            {/* Social links are dynamic and editable by Admin */}
-            {(() => {
-              const social = (state.social || {}) as Record<string, string>;
-              const items: Array<{ key: string; Icon: any }> = [
-                { key: "facebook", Icon: Facebook },
-                { key: "linkedin", Icon: Linkedin },
-                { key: "twitter", Icon: Twitter },
-                { key: "instagram", Icon: Instagram },
-              ];
-              return items.map(({ key, Icon }, i) => {
-                const href = social[key] || "";
-                return (
-                  <a
-                    key={i}
-                    href={href || "#"}
-                    target={href ? "_blank" : undefined}
-                    rel={href ? "noreferrer noopener" : undefined}
-                    className="h-10 w-10 rounded-xl glass hover:gradient-bg hover:text-white text-violet grid place-items-center transition"
-                    aria-label={key}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </a>
-                );
-              });
-            })()}
+            {[Instagram, Twitter, Linkedin, Facebook].map((Icon, i) => (
+              <a
+                key={i}
+                href="#"
+                className="h-10 w-10 rounded-xl glass hover:gradient-bg hover:text-white text-violet grid place-items-center transition"
+              >
+                <Icon className="h-4 w-4" />
+              </a>
+            ))}
           </div>
 
           {messages.length > 0 && (
@@ -144,15 +126,14 @@ export function Contact() {
         </div>
 
         <form onSubmit={submit} className="glass-strong rounded-2xl p-6 space-y-4">
-          <h3 className="font-semibold text-lg gradient-text">إرسال رسالة</h3>
+          <h3 className="font-semibold text-lg gradient-text">Send a message</h3>
           <div>
-            <Label className="text-right">الاسم</Label>
-            <Input className="text-right" maxLength={100} value={name} onChange={(e) => setName(e.target.value)} />
+            <Label>Name</Label>
+            <Input maxLength={100} value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div>
-            <Label className="text-right">البريد الإلكتروني (اختياري)</Label>
+            <Label>Email (optional)</Label>
             <Input
-              className="text-right"
               type="email"
               maxLength={255}
               value={email}
@@ -160,9 +141,8 @@ export function Contact() {
             />
           </div>
           <div>
-            <Label className="text-right">الرسالة</Label>
+            <Label>Message</Label>
             <Textarea
-              className="text-right"
               maxLength={1000}
               rows={5}
               value={text}
@@ -170,7 +150,7 @@ export function Contact() {
             />
           </div>
           <Button type="submit" className="gradient-bg text-white w-full">
-            <Send className="h-4 w-4 ml-2" /> إرسال رسالة
+            <Send className="h-4 w-4 mr-2" /> Send message
           </Button>
         </form>
       </div>

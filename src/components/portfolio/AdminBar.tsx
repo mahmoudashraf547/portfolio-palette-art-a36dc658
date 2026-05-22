@@ -11,13 +11,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Lock, LogOut, Pencil, RotateCcw, Settings } from "lucide-react";
+import { Eye, EyeOff, Lock, LogOut, Pencil, RotateCcw } from "lucide-react";
 
 export function AdminBar() {
   const { isAdmin, editMode, login, logout, setEditMode } = useAuth();
-  const { resetAll, state, setSocialLinks } = usePortfolio();
+  const { resetAll } = usePortfolio();
   const [loginOpen, setLoginOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [u, setU] = useState("");
   const [p, setP] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -97,60 +96,6 @@ export function AdminBar() {
       <Button size="icon" variant="ghost" onClick={logout} title="تسجيل الخروج">
         <LogOut className="h-4 w-4" />
       </Button>
-      <button
-        onClick={() => setSettingsOpen(true)}
-        className="h-8 w-8 rounded-full glass hover:gradient-bg grid place-items-center text-violet"
-        title="إعدادات التواصل"
-      >
-        <Settings className="h-4 w-4" />
-      </button>
-
-      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogContent className="glass-strong max-w-sm" dir="rtl">
-          <DialogHeader>
-            <DialogTitle className="gradient-text text-right">إعدادات الروابط الاجتماعية</DialogTitle>
-          </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const form = e.currentTarget as HTMLFormElement & {
-                facebook: HTMLInputElement;
-                linkedin: HTMLInputElement;
-                twitter: HTMLInputElement;
-                instagram: HTMLInputElement;
-              };
-              setSocialLinks({
-                facebook: form.facebook.value.trim(),
-                linkedin: form.linkedin.value.trim(),
-                twitter: form.twitter.value.trim(),
-                instagram: form.instagram.value.trim(),
-              });
-              setSettingsOpen(false);
-            }}
-            className="space-y-3"
-          >
-            <div>
-              <Label>Facebook</Label>
-              <Input name="facebook" defaultValue={state.social?.facebook || ""} />
-            </div>
-            <div>
-              <Label>LinkedIn</Label>
-              <Input name="linkedin" defaultValue={state.social?.linkedin || ""} />
-            </div>
-            <div>
-              <Label>Twitter</Label>
-              <Input name="twitter" defaultValue={state.social?.twitter || ""} />
-            </div>
-            <div>
-              <Label>Instagram</Label>
-              <Input name="instagram" defaultValue={state.social?.instagram || ""} />
-            </div>
-            <DialogFooter>
-              <Button type="submit" className="gradient-bg text-white">حفظ</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

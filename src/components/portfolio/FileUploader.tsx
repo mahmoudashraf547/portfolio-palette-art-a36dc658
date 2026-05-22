@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { detectFileKind, type StoredFile } from "@/lib/portfolio-store";
-import { uploadToSupabaseViaApi } from "@/lib/r2-storage";
+import { cacheObjectUrl, putBlob } from "@/lib/file-storage";
 import { Button } from "@/components/ui/button";
 import { Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,20 +31,17 @@ export function FileUploader({ value, onChange, label = "رفع ملف", accept,
     setErr(null);
     setProgress(0);
     try {
-      const fileId = crypto.randomUUID();
-      
-      // Upload to Supabase Storage for permanent, worldwide accessibility
-      setProgress(30);
-      const { url: supabaseUrl } = await uploadToSupabaseViaApi(fileId, f, f.name);
-      
+      const id = crypto.randomUUID();
+      // Persist the raw blob in IndexedDB (no base64 inflation, supports large files)
+      await putBlob(id, f);
+      setProgress(60);
+      const url = cacheObjectUrl(id, f);
       setProgress(100);
-      
-      // Store Supabase URL (permanent, public, shared across all users)
       const stored: StoredFile = {
-        id: fileId,
+        id,
         name: f.name,
         kind: detectFileKind(f),
-        dataUrl: supabaseUrl, // Permanent Supabase URL accessible to everyone
+        dataUrl: url, // blob: URL (runtime-only; not persisted)
         size: f.size,
       };
       onChange(stored);

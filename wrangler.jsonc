@@ -4,20 +4,4 @@
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
-
-  // Environment Variables for Supabase Storage
-  "env": {
-    "production": {
-      "vars": {
-        "SUPABASE_URL": "https://sbqbteajqanpfqsngtaf.supabase.co",
-        "SUPABASE_ANON_KEY": "sb_publishable_BGeogoLgeu7pAGhwMwt2xg_a_xrO9EQ",
-        "SUPABASE_BUCKET_NAME": "portfolio-images"
-      }
-    }
-  },
-
-  // Observability
-  "observability": {
-    "enabled": true
-  }
 }

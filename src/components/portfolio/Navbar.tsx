@@ -42,13 +42,12 @@ export function Navbar({
   };
 
   return (
-    <>
-      <header
-        className={cn(
-          "fixed top-0 inset-x-0 z-40 transition-all",
-          scrolled ? "py-2" : "py-4"
-        )}
-      >
+    <header
+      className={cn(
+        "fixed top-0 inset-x-0 z-40 transition-all",
+        scrolled ? "py-2" : "py-4"
+      )}
+    >
       <div className="max-w-7xl mx-auto px-4">
         <nav
           className={cn(
@@ -191,8 +190,5 @@ export function Navbar({
         )}
       </div>
     </header>
-      {/* Spacer to push page content below the fixed navbar -- responsive heights */}
-      <div className="h-16 sm:h-20 md:h-24" aria-hidden />
-    </>
   );
 }
