@@ -69,7 +69,7 @@ export function SectionArea({ area, className }: Props) {
   };
 
   return (
-    <div className={cn("space-y-8", className)}>
+    <div className={cn("space-y-8 page-section", className)}>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
           {sections.map((s, idx) => (

@@ -9,6 +9,7 @@ import {
   getCachedThumb,
   getPdfPageCount,
   renderPdfPageToCanvas,
+  cancelRenderForCanvas,
 } from "@/lib/pdf-utils";
 
 /* ---------------- PDF Thumbnail ---------------- */
@@ -109,20 +110,35 @@ function LazyPdfPage({
     let cancelled = false;
     renderPdfPageToCanvas(file, pageNumber, canvasRef.current, width)
       .then(() => {
-        if (!cancelled) setRendered(true);
+        if (!cancelled) {
+          try {
+            if (canvasRef.current) {
+              canvasRef.current.style.width = "100%";
+              canvasRef.current.style.maxWidth = "100%";
+              canvasRef.current.style.display = "block";
+              try {
+                canvasRef.current.style.setProperty("height", "auto", "important");
+              } catch (e) {}
+            }
+          } catch (e) {}
+          setRendered(true);
+        }
       })
       .catch((e: any) => {
         if (!cancelled) onError(e?.message || "تعذّر عرض صفحة من المستند");
       });
     return () => {
       cancelled = true;
+      try {
+        cancelRenderForCanvas(canvasRef.current);
+      } catch (e) {}
     };
   }, [file.id, onError, pageNumber, visible, width]);
 
   // Maintain space so virtual scroll works
   const placeholderHeight = Math.round(width * 1.41); // A4 ratio approx
   return (
-    <div ref={ref} className="shadow-lg rounded overflow-hidden bg-white" style={{ minHeight: visible ? undefined : placeholderHeight, width }}>
+    <div ref={ref} className="shadow-lg rounded overflow-hidden bg-white" style={{ minHeight: visible ? undefined : placeholderHeight, width: '100%', maxWidth: width }}>
       {visible ? (
         <div className="relative flex justify-center bg-white" style={{ minHeight: rendered ? undefined : placeholderHeight }}>
           {!rendered && (
@@ -130,7 +146,7 @@ function LazyPdfPage({
               <Loader2 className="h-5 w-5 animate-spin text-violet" />
             </div>
           )}
-          <canvas ref={canvasRef} className="max-w-full" />
+          <canvas key={`pdf-page-${pageNumber}`} ref={canvasRef} className="pdf-canvas max-w-full h-auto" />
         </div>
       ) : (
         <Skeleton className="w-full h-full" style={{ height: placeholderHeight }} />
@@ -153,6 +169,7 @@ export function PdfPreviewModal({
   const [width, setWidth] = useState(900);
   const [loading, setLoading] = useState(false);
   const [loadErr, setLoadErr] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const u = () => setWidth(Math.min(900, window.innerWidth - 80));
@@ -183,6 +200,19 @@ export function PdfPreviewModal({
     };
   }, [open, file?.id]);
 
+  // When the modal closes or the component unmounts, cancel any active
+  // renders for canvases that were created inside this container.
+  useEffect(() => {
+    return () => {
+      try {
+        if (!containerRef.current) return;
+        containerRef.current.querySelectorAll('.pdf-canvas').forEach((el) =>
+          cancelRenderForCanvas(el as HTMLCanvasElement)
+        );
+      } catch (e) {}
+    };
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-5xl w-[95vw] h-[92vh] p-0 overflow-hidden glass-strong">
@@ -208,7 +238,7 @@ export function PdfPreviewModal({
             </Button>
           </div>
         </div>
-        <div className="overflow-auto h-[calc(92vh-56px)] bg-gradient-to-br from-lavender/20 to-skyblue/20 p-4 flex flex-col items-center gap-4">
+        <div ref={containerRef} className="pdf-viewer-container w-full h-[calc(92vh-56px)] bg-gradient-to-br from-lavender/20 to-skyblue/20 p-4 gap-4">
           {loadErr && (
             <div className="text-destructive text-sm pt-8">{loadErr}</div>
           )}
@@ -220,23 +250,26 @@ export function PdfPreviewModal({
             </div>
           )}
           {!loadErr && file && numPages > 0 && (
-            <>
+            <div className="pdf-pages-list w-full flex flex-col items-center gap-4">
               {Array.from({ length: numPages }, (_, i) => (
-                <LazyPdfPage
-                  key={i}
-                  file={file}
-                  pageNumber={i + 1}
-                  width={width}
-                  onError={setLoadErr}
-                />
+                <div key={`pdf-page-wrap-${i+1}`} className="pdf-page-wrap w-full">
+                  <LazyPdfPage
+                    file={file}
+                    pageNumber={i + 1}
+                    width={width}
+                    onError={setLoadErr}
+                  />
+                </div>
               ))}
-            </>
+            </div>
           )}
         </div>
       </DialogContent>
     </Dialog>
   );
 }
+
+
 
 /* ---------------- DOCX Modal ---------------- */
 export function DocxPreviewModal({

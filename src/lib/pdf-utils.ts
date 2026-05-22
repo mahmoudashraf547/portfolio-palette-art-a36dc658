@@ -33,6 +33,8 @@ export interface PdfThumb {
 const thumbCache = new Map<string, PdfThumb>();
 const thumbInflight = new Map<string, Promise<PdfThumb>>();
 const docCache = new Map<string, Promise<PDFDocumentProxy>>();
+// Track active render tasks per-canvas so we can cancel before starting new renders
+const renderTasks = new WeakMap<HTMLCanvasElement, { promise: Promise<any>; cancel?: () => void }>();
 
 export function getCachedThumb(file: StoredFile): PdfThumb | null {
   return thumbCache.get(file.id) ?? null;
@@ -121,15 +123,66 @@ export async function renderPdfPageToCanvas(
   const cssScale = cssWidth / baseViewport.width;
   const viewport = page.getViewport({ scale: cssScale * dpr });
 
+  // If there's an existing render for this canvas, cancel it BEFORE sizing
+  const prev = renderTasks.get(canvas);
+  if (prev && typeof prev.cancel === "function") {
+    try {
+      prev.cancel();
+    } catch (e) {
+      // ignore cancellation errors
+    }
+    renderTasks.delete(canvas);
+  }
+
+  // Initialize canvas backing store and styles AFTER cancellation to avoid
+  // race conditions where an old render paints over a new canvas state.
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D unavailable");
   canvas.width = Math.floor(viewport.width);
   canvas.height = Math.floor(viewport.height);
-  canvas.style.width = `${cssWidth}px`;
-  canvas.style.height = `${Math.floor(viewport.height / dpr)}px`;
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Make the canvas scale responsively: keep high-res backing store
+  // but force CSS width to fill the parent and height to auto so it
+  // scales down on mobile without cropping.
+  canvas.style.width = `100%`;
+  canvas.style.maxWidth = `100%`;
+  canvas.style.display = `block`;
+  try {
+    canvas.style.setProperty("height", "auto", "important");
+  } catch (e) {}
 
-  await page.render({ canvasContext: ctx, viewport, canvas } as any).promise;
-  page.cleanup();
+  // Clear any previous drawing immediately so the canvas never shows
+  // duplicated content while a new render starts.
+  try {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  } catch (e) {}
+
+  const renderTask: any = page.render({ canvasContext: ctx, viewport, canvas } as any);
+  // store active task so future renders can cancel it
+  renderTasks.set(canvas, renderTask);
+  try {
+    await renderTask.promise;
+  } finally {
+    renderTasks.delete(canvas);
+    try {
+      page.cleanup();
+    } catch (e) {
+      // ignore cleanup errors
+    }
+  }
+}
+
+/** Cancel any active render task associated with a canvas. Safe to call
+ * before starting a new render or when switching pages. */
+export function cancelRenderForCanvas(canvas: HTMLCanvasElement | null) {
+  if (!canvas) return;
+  const t = renderTasks.get(canvas);
+  if (!t) return;
+  try {
+    if (typeof t.cancel === "function") t.cancel();
+  } catch (e) {
+    // ignore
+  }
+  renderTasks.delete(canvas);
 }
