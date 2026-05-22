@@ -71,9 +71,21 @@ export function PdfThumbnail({ file, onClick }: { file: StoredFile; onClick?: ()
 }
 
 /* ---------------- Lazy-rendered single page ---------------- */
-function LazyPdfPage({ pageNumber, width }: { pageNumber: number; width: number }) {
+function LazyPdfPage({
+  file,
+  pageNumber,
+  width,
+  onError,
+}: {
+  file: StoredFile;
+  pageNumber: number;
+  width: number;
+  onError: (message: string) => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [visible, setVisible] = useState(pageNumber <= 2); // eager-render first 2
+  const [rendered, setRendered] = useState(false);
 
   useEffect(() => {
     if (visible || !ref.current) return;
@@ -91,22 +103,35 @@ function LazyPdfPage({ pageNumber, width }: { pageNumber: number; width: number 
     return () => io.disconnect();
   }, [visible]);
 
+  useEffect(() => {
+    if (!visible || !canvasRef.current) return;
+    setRendered(false);
+    let cancelled = false;
+    renderPdfPageToCanvas(file, pageNumber, canvasRef.current, width)
+      .then(() => {
+        if (!cancelled) setRendered(true);
+      })
+      .catch((e: any) => {
+        if (!cancelled) onError(e?.message || "تعذّر عرض صفحة من المستند");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [file.id, onError, pageNumber, visible, width]);
+
   // Maintain space so virtual scroll works
   const placeholderHeight = Math.round(width * 1.41); // A4 ratio approx
   return (
     <div ref={ref} className="shadow-lg rounded overflow-hidden bg-white" style={{ minHeight: visible ? undefined : placeholderHeight, width }}>
       {visible ? (
-        <PdfPage
-          pageNumber={pageNumber}
-          width={width}
-          renderTextLayer={false}
-          renderAnnotationLayer={false}
-          loading={
-            <div style={{ height: placeholderHeight }} className="flex items-center justify-center">
+        <div className="relative flex justify-center bg-white" style={{ minHeight: rendered ? undefined : placeholderHeight }}>
+          {!rendered && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/80">
               <Loader2 className="h-5 w-5 animate-spin text-violet" />
             </div>
-          }
-        />
+          )}
+          <canvas ref={canvasRef} className="max-w-full" />
+        </div>
       ) : (
         <Skeleton className="w-full h-full" style={{ height: placeholderHeight }} />
       )}
