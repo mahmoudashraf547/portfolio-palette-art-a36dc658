@@ -31,9 +31,8 @@ export function getCachedThumb(file: StoredFile): PdfThumb | null {
   return cache.get(file.id) ?? null;
 }
 
-/** Fetch the file's raw bytes once and cache. react-pdf re-uses the buffer
- *  reference, which avoids the "Unable to load document" race that happens
- *  when a base64 dataUrl gets re-parsed on every render. */
+/** Fetch the file's raw bytes once and cache them so every PDF operation uses
+ *  a stable buffer instead of reparsing the base64 data URL on each render. */
 export async function getPdfBytes(file: StoredFile): Promise<Uint8Array> {
   const hit = bytesCache.get(file.id);
   if (hit) return hit;
@@ -67,7 +66,7 @@ export async function generatePdfThumbnail(
     const pdfjs = await getPdfjs();
     const bytes = await getPdfBytes(file);
     // pdf.js takes ownership of the buffer; pass a copy so the cached array
-    // stays intact for later use by react-pdf.
+    // stays intact for later page-count and canvas rendering.
     const doc = await pdfjs.getDocument({ data: bytes.slice(0) }).promise;
     const page = await doc.getPage(1);
 
